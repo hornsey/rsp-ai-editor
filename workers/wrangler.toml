@@ -1,6 +1,6 @@
 # Cloudflare Workers — wrangler.toml
 name = "rsp-api"
-main = "src/entry.ts"
+main = "entry.ts"
 compatibility_date = "2026-06-02"
 compatibility_flags = ["nodejs_compat"]
 
@@ -8,7 +8,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "rsp-db"
-database_id = "[BLOCKED: create D1 first, then fill in]"
+database_id = "93658231-c023-47d1-8839-1058283a724f"
 
 # KV bindings
 [[kv_namespaces]]
@@ -22,18 +22,11 @@ id = "864c39c2ce244d11866532fc8784dca9"
 # R2 bindings
 [[r2_buckets]]
 binding = "UPLOADS"
-bucket_name = "rsp-uploads"
+bucket_name = "image-editor-assets"
 
 [[r2_buckets]]
 binding = "OUTPUTS"
-bucket_name = "rsp-outputs"
-
-# Secrets — set via: wrangler secret put NAME
-# wrangler secret put SESSION_SECRET_KEY
-# wrangler secret put ADMIN_KEY
-# wrangler secret put GOOGLE_CLIENT_ID
-# wrangler secret put GOOGLE_CLIENT_SECRET
-# wrangler secret put AI_PROVIDER
+bucket_name = "image-editor-assets"
 
 [vars]
 AI_PROVIDER = "cf-workers-ai"

@@ -1,12 +1,10 @@
 -- RSP AI Editor — D1 Schema Migration 0001
 -- Run: wrangler d1 execute rsp-db --file=./migrations/0001_initial.sql --remote
 
-BEGIN;
-
 -- Sessions (anonymous + Google-linked)
 CREATE TABLE sessions (
   id           TEXT PRIMARY KEY,
-  google_id    TEXT UNIQUE,                       -- Google OAuth sub
+  google_id    TEXT UNIQUE,
   plan         TEXT NOT NULL DEFAULT 'free',
   edits_used   INTEGER NOT NULL DEFAULT 0,
   edits_limit  INTEGER NOT NULL DEFAULT 5,
@@ -77,5 +75,3 @@ INSERT INTO pricing_tiers VALUES
   ('free',  5,    'day',   0, 1, 1,   unixepoch()),
   ('pro',   500,  'month', 1, 0, 20,  unixepoch()),
   ('team',  2500, 'month', 1, 0, 20,  unixepoch());
-
-COMMIT;
