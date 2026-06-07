@@ -1,0 +1,39 @@
+# Cloudflare Workers — wrangler.toml
+name = "rsp-api"
+main = "src/entry.ts"
+compatibility_date = "2026-06-02"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 binding
+[[d1_databases]]
+binding = "DB"
+database_name = "rsp-db"
+database_id = "[BLOCKED: create D1 first, then fill in]"
+
+# KV bindings
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "48712c55221f467aa1d25bd6b2522fac"
+
+[[kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "864c39c2ce244d11866532fc8784dca9"
+
+# R2 bindings
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "rsp-uploads"
+
+[[r2_buckets]]
+binding = "OUTPUTS"
+bucket_name = "rsp-outputs"
+
+# Secrets — set via: wrangler secret put NAME
+# wrangler secret put SESSION_SECRET_KEY
+# wrangler secret put ADMIN_KEY
+# wrangler secret put GOOGLE_CLIENT_ID
+# wrangler secret put GOOGLE_CLIENT_SECRET
+# wrangler secret put AI_PROVIDER
+
+[vars]
+AI_PROVIDER = "cf-workers-ai"

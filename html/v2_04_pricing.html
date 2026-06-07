@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pricing | RSP AI Editor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-container": "#5c647a",
+                      "secondary-fixed": "#dae2fd",
+                      "inverse-surface": "#213145",
+                      "on-background": "#0b1c30",
+                      "tertiary-fixed": "#e0e3e5",
+                      "on-tertiary": "#ffffff",
+                      "primary-container": "#7c3aed",
+                      "secondary-fixed-dim": "#bec6e0",
+                      "on-primary-fixed": "#25005a",
+                      "tertiary-fixed-dim": "#c4c7c9",
+                      "surface-container-high": "#dce9ff",
+                      "primary-fixed-dim": "#d2bbff",
+                      "on-secondary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary": "#4c4f51",
+                      "on-tertiary-fixed": "#191c1e",
+                      "primary": "#630ed4",
+                      "outline-variant": "#ccc3d8",
+                      "on-primary-fixed-variant": "#5a00c6",
+                      "secondary": "#565e74",
+                      "inverse-primary": "#d2bbff",
+                      "surface-dim": "#cbdbf5",
+                      "on-secondary-fixed-variant": "#3f465c",
+                      "surface-container": "#e5eeff",
+                      "on-surface-variant": "#4a4455",
+                      "on-primary-container": "#ede0ff",
+                      "on-error-container": "#93000a",
+                      "surface-bright": "#f8f9ff",
+                      "on-secondary-fixed": "#131b2e",
+                      "on-primary": "#ffffff",
+                      "surface-variant": "#d3e4fe",
+                      "secondary-container": "#dae2fd",
+                      "primary-fixed": "#eaddff",
+                      "on-tertiary-container": "#e4e6e8",
+                      "on-surface": "#0b1c30",
+                      "on-error": "#ffffff",
+                      "inverse-on-surface": "#eaf1ff",
+                      "tertiary-container": "#646769",
+                      "surface": "#f8f9ff",
+                      "error-container": "#ffdad6",
+                      "surface-container-low": "#eff4ff",
+                      "on-tertiary-fixed-variant": "#444749",
+                      "background": "#f8f9ff",
+                      "surface-tint": "#732ee4",
+                      "outline": "#7b7487",
+                      "error": "#ba1a1a",
+                      "surface-container-highest": "#d3e4fe"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "8px",
+                      "base": "4px",
+                      "xl": "64px",
+                      "lg": "40px",
+                      "container-max": "1280px",
+                      "sm": "16px",
+                      "md": "24px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Geist"],
+                      "display-lg": ["Geist"],
+                      "body-sm": ["Inter"],
+                      "label-sm": ["Geist"],
+                      "body-lg": ["Inter"],
+                      "label-md": ["Geist"],
+                      "headline-lg-mobile": ["Geist"],
+                      "headline-md": ["Geist"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ai-gradient-bg {
+            background: linear-gradient(135deg, #7c3aed 0%, #630ed4 100%);
+        }
+        .ai-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+        }
+        .hero-pattern {
+            background-color: #f8f9ff;
+            background-image: radial-gradient(#7c3aed 0.5px, transparent 0.5px), radial-gradient(#7c3aed 0.5px, #f8f9ff 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            opacity: 0.05;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-surface shadow-sm border-b border-outline-variant">
+<div class="max-w-container-max mx-auto px-md md:px-lg flex items-center justify-between h-20">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="auto_fix_high">auto_fix_high</span>
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary">RSP AI Editor</h1>
+</div>
+<nav class="hidden md:flex items-center gap-lg">
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">Editor</a>
+<a class="text-primary font-bold border-b-2 border-primary transition-colors duration-200" href="#">Pricing</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">Templates</a>
+</nav>
+<button class="active:scale-95 transition-transform bg-primary text-on-primary px-md py-xs rounded-lg font-label-md">
+                Open Free Editor
+            </button>
+</div>
+</header>
+<main class="flex-grow relative">
+<div class="absolute inset-0 hero-pattern pointer-events-none"></div>
+<!-- Hero Section -->
+<section class="relative pt-xl pb-lg px-md text-center max-w-4xl mx-auto">
+<h2 class="font-display-lg text-display-lg text-on-background mb-base">Simple, Transparent Pricing</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Start free. Upgrade when you need more.</p>
+</section>
+<!-- Pricing Cards -->
+<section class="px-md pb-xl">
+<div class="max-w-[900px] mx-auto grid md:grid-cols-2 gap-lg items-stretch">
+<!-- Free Plan -->
+<div class="bg-white border border-outline-variant rounded-xl p-lg flex flex-col hover:shadow-md transition-shadow duration-300">
+<div class="mb-lg">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Free</h3>
+<div class="flex items-baseline gap-xs mb-sm">
+<span class="text-4xl font-bold text-on-background">$0</span>
+<span class="text-on-surface-variant font-body-sm">/ month</span>
+</div>
+<p class="text-on-surface-variant font-body-md">Perfect for trying out the editor</p>
+</div>
+<ul class="flex-grow space-y-md mb-xl">
+<li class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check_circle">check_circle</span>
+<span class="text-on-surface font-body-md">10 edits per day</span>
+</li>
+<li class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check_circle">check_circle</span>
+<span class="text-on-surface font-body-md">Standard export quality</span>
+</li>
+<li class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check_circle">check_circle</span>
+<span class="text-on-surface font-body-md">JPG and PNG support</span>
+</li>
+<li class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check_circle">check_circle</span>
+<span class="text-on-surface font-body-md">No signup required</span>
+</li>
+</ul>
+<button class="w-full border-2 border-primary text-primary font-label-md py-sm rounded-lg active:scale-95 transition-transform hover:bg-primary-fixed">
+                        Get Started Free
+                    </button>
+</div>
+<!-- Pro Plan -->
+<div class="relative bg-white border-2 border-primary rounded-xl p-lg flex flex-col shadow-lg transform md:scale-105 z-10">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-on-primary px-md py-base rounded-full text-label-sm uppercase tracking-wider shadow-sm">
+                        Most Popular
+                    </div>
+<div class="mb-lg">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Pro</h3>
+<div class="flex items-baseline gap-xs mb-sm">
+<span class="text-4xl font-bold text-on-background">$12</span>
+<span class="text-on-surface-variant font-body-sm">/ month</span>
+</div>
+<p class="text-on-surface-variant font-body-md">For creators who need more power</p>
+</div>
+<ul class="flex-grow space-y-md mb-xl">
+<li class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface font-body-md font-semibold">Unlimited edits</span>
+</li>
+<li class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface font-body-md">HD export (no watermark)</span>
+</li>
+<li class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface font-body-md">Batch processing up to 10 images</span>
+</li>
+<li class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface font-body-md">Priority processing speed</span>
+</li>
+<li class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface font-body-md">All export formats including WebP</span>
+</li>
+</ul>
+<button class="w-full ai-gradient-bg text-on-primary font-label-md py-sm rounded-lg active:scale-95 transition-transform shadow-lg shadow-primary/20">
+                        Upgrade to Pro
+                    </button>
+</div>
+</div>
+<!-- Custom Plan Link -->
+<div class="mt-xl text-center">
+<p class="text-on-surface-variant font-body-md">
+                    Need a custom plan for your team? 
+                    <a class="text-primary font-semibold hover:underline decoration-2 underline-offset-4" href="#">Contact us.</a>
+</p>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="max-w-3xl mx-auto px-md py-xl mb-xl border-t border-outline-variant/30">
+<h2 class="font-headline-lg text-headline-lg text-center mb-lg">Frequently Asked Questions</h2>
+<div class="space-y-sm">
+<!-- Question 1 -->
+<div class="bg-surface-container-low rounded-xl p-md cursor-pointer group transition-all" onclick="this.querySelector('.faq-content').classList.toggle('hidden'); this.querySelector('.faq-icon').classList.toggle('rotate-180')">
+<div class="flex justify-between items-center">
+<h4 class="font-headline-md text-body-lg text-on-surface">Do I really need no signup?</h4>
+<span class="material-symbols-outlined faq-icon transition-transform duration-300" data-icon="expand_more">expand_more</span>
+</div>
+<div class="faq-content hidden mt-sm text-on-surface-variant font-body-md">
+                        Yes, for the Free plan you can start editing immediately without creating an account. Your session is stored locally in your browser.
+                    </div>
+</div>
+<!-- Question 2 -->
+<div class="bg-surface-container-low rounded-xl p-md cursor-pointer group transition-all" onclick="this.querySelector('.faq-content').classList.toggle('hidden'); this.querySelector('.faq-icon').classList.toggle('rotate-180')">
+<div class="flex justify-between items-center">
+<h4 class="font-headline-md text-body-lg text-on-surface">What image formats are supported?</h4>
+<span class="material-symbols-outlined faq-icon transition-transform duration-300" data-icon="expand_more">expand_more</span>
+</div>
+<div class="faq-content hidden mt-sm text-on-surface-variant font-body-md">
+                        We support JPG, PNG, and WebP for imports. Pro users can export in high-fidelity formats including optimized WebP and high-quality PNG.
+                    </div>
+</div>
+<!-- Question 3 -->
+<div class="bg-surface-container-low rounded-xl p-md cursor-pointer group transition-all" onclick="this.querySelector('.faq-content').classList.toggle('hidden'); this.querySelector('.faq-icon').classList.toggle('rotate-180')">
+<div class="flex justify-between items-center">
+<h4 class="font-headline-md text-body-lg text-on-surface">Can I cancel anytime?</h4>
+<span class="material-symbols-outlined faq-icon transition-transform duration-300" data-icon="expand_more">expand_more</span>
+</div>
+<div class="faq-content hidden mt-sm text-on-surface-variant font-body-md">
+                        Absolutely. Pro subscriptions are billed monthly and you can cancel from your dashboard at any time with no hidden fees or penalties.
+                    </div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low border-t border-outline-variant w-full py-xl">
+<div class="max-w-container-max mx-auto px-md md:px-lg flex flex-col md:flex-row justify-between items-center gap-lg">
+<div class="flex flex-col items-center md:items-start gap-xs">
+<span class="font-headline-md text-headline-md text-on-surface font-bold">RSP AI Editor</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">© 2024 RSP AI Editor. Precision performance.</p>
+</div>
+<div class="flex gap-lg">
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors cursor-pointer" href="#">Privacy</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors cursor-pointer" href="#">Terms</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors cursor-pointer" href="#">Contact</a>
+</div>
+</div>
+</footer>
+<!-- Atmosphere Micro-interaction script -->
+<script>
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mouseenter', () => {
+                // Subtle lift or scale handled by tailwind classes usually, 
+                // but we can add an extra ripple effect or similar here if desired.
+            });
+        });
+
+        // Simple parallax for the background pattern
+        window.addEventListener('mousemove', (e) => {
+            const pattern = document.querySelector('.hero-pattern');
+            const moveX = (e.clientX / window.innerWidth) * 20;
+            const moveY = (e.clientY / window.innerHeight) * 20;
+            pattern.style.backgroundPosition = `${moveX}px ${moveY}px, ${moveX + 10}px ${moveY + 10}px`;
+        });
+    </script>
+</body></html>

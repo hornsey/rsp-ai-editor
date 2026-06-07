@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lumina AI | Edit Images &amp; Copy in Seconds</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        body {
+            font-family: 'Geist', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .before-after-slider {
+            position: relative;
+            overflow: hidden;
+        }
+        .slider-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: white;
+            left: 50%;
+            cursor: ew-resize;
+            z-index: 10;
+        }
+        .slider-handle::after {
+            content: '↔';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: #5341cd;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-container": "#352c8a",
+                      "tertiary-fixed-dim": "#2edcd7",
+                      "outline": "#787586",
+                      "on-secondary-fixed-variant": "#413996",
+                      "on-error": "#ffffff",
+                      "on-tertiary-fixed": "#00201f",
+                      "on-surface": "#161d1f",
+                      "background": "#f4fafd",
+                      "on-secondary-fixed": "#140067",
+                      "inverse-primary": "#c6bfff",
+                      "surface-dim": "#d4dbdd",
+                      "surface-container-lowest": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "surface-container-high": "#e2e9ec",
+                      "surface-container": "#e8eff1",
+                      "surface-container-low": "#eef5f7",
+                      "on-surface-variant": "#474554",
+                      "tertiary-fixed": "#5af9f3",
+                      "secondary-fixed-dim": "#c5c0ff",
+                      "surface-bright": "#f4fafd",
+                      "on-tertiary-fixed-variant": "#00504e",
+                      "on-primary-fixed": "#160066",
+                      "primary-fixed-dim": "#c6bfff",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-container": "#007f7c",
+                      "surface-tint": "#5847d2",
+                      "on-primary-fixed-variant": "#4029ba",
+                      "surface": "#f4fafd",
+                      "inverse-on-surface": "#ebf2f4",
+                      "secondary-container": "#a19afd",
+                      "on-primary-container": "#faf6ff",
+                      "on-tertiary-container": "#d9fffc",
+                      "secondary-fixed": "#e3dfff",
+                      "tertiary": "#006461",
+                      "secondary": "#5952af",
+                      "surface-variant": "#dde4e6",
+                      "on-primary": "#ffffff",
+                      "primary": "#5341cd",
+                      "on-secondary": "#ffffff",
+                      "primary-container": "#6c5ce7",
+                      "on-background": "#161d1f",
+                      "inverse-surface": "#2b3234",
+                      "outline-variant": "#c8c4d7",
+                      "primary-fixed": "#e4dfff",
+                      "error-container": "#ffdad6",
+                      "error": "#ba1a1a",
+                      "surface-container-highest": "#dde4e6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "gutter": "24px",
+                      "xl": "32px",
+                      "lg": "24px",
+                      "unit": "4px",
+                      "max-width": "1440px",
+                      "margin-desktop": "40px",
+                      "margin-mobile": "16px",
+                      "md": "16px",
+                      "xs": "4px"
+              },
+              "fontFamily": {
+                      "body-sm": ["Geist"],
+                      "headline-lg-mobile": ["Geist"],
+                      "code": ["Geist"],
+                      "display": ["Geist"],
+                      "label-md": ["Geist"],
+                      "headline-lg": ["Geist"],
+                      "body-md": ["Geist"],
+                      "body-lg": ["Geist"],
+                      "headline-md": ["Geist"]
+              },
+              "fontSize": {
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "code": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-md": ["14px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface">
+<!-- Top Navigation -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop py-md max-w-max-width mx-auto bg-surface dark:bg-inverse-surface shadow-sm">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-headline-md" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">Lumina AI</span>
+</div>
+<nav class="hidden md:flex gap-lg">
+<a class="font-label-md text-label-md text-primary dark:text-inverse-primary font-bold border-b-2 border-primary hover:text-primary transition-colors" href="#">Home</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors" href="#">Features</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors" href="#">Pricing</a>
+</nav>
+<button class="bg-primary-container text-on-primary-container px-lg py-sm rounded-full font-label-md text-label-md active:scale-95 transition-transform duration-150">
+            Start Free
+        </button>
+</header>
+<main class="pt-32 pb-xl">
+<!-- Hero Section -->
+<section class="px-margin-mobile md:px-margin-desktop max-w-max-width mx-auto text-center mb-xl">
+<h1 class="font-display text-display mb-md md:text-headline-lg lg:text-display text-on-surface leading-tight">
+                Edit Images &amp; Copy in Seconds — No Signup Required
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-xl">
+                Upload your photo, pick an AI mode, and download in seconds. Free, instant, no account needed.
+            </p>
+<div class="flex flex-col items-center gap-md">
+<button class="bg-primary text-on-primary px-xl py-md rounded-xl font-headline-md text-headline-md flex items-center gap-sm hover:shadow-lg transition-all active:scale-95">
+                    Start Editing Free
+                    <span class="material-symbols-outlined">arrow_downward</span>
+</button>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-body-sm" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-body-sm text-body-sm">Trusted by 50,000+ creators</span>
+</div>
+</div>
+</section>
+<!-- Task Shortcuts - Bento Grid Style -->
+<section class="px-margin-mobile md:px-margin-desktop max-w-max-width mx-auto grid grid-cols-1 md:grid-cols-3 gap-lg mb-32">
+<!-- Card 1 -->
+<div class="bg-surface-container border border-outline-variant p-lg rounded-xl flex flex-col items-start gap-md hover:border-primary transition-colors group cursor-pointer">
+<div class="bg-primary-container/10 p-sm rounded-lg">
+<span class="material-symbols-outlined text-primary text-headline-md" style="font-variation-settings: 'FILL' 1;">colors_spark</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md mb-xs">Enhance Photo</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Upscale resolution and fix lighting instantly with Lumina Engine.</p>
+</div>
+<span class="bg-primary/10 text-primary px-sm py-xs rounded-full font-label-md text-label-md mt-auto group-hover:bg-primary group-hover:text-on-primary transition-colors">AI Suggested</span>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container border border-outline-variant p-lg rounded-xl flex flex-col items-start gap-md hover:border-primary transition-colors group cursor-pointer">
+<div class="bg-primary-container/10 p-sm rounded-lg">
+<span class="material-symbols-outlined text-primary text-headline-md">magic_button</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md mb-xs">Remove Background</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Perfect cutouts in milliseconds. No manual masking required.</p>
+</div>
+<span class="bg-primary/10 text-primary px-sm py-xs rounded-full font-label-md text-label-md mt-auto group-hover:bg-primary group-hover:text-on-primary transition-colors">One-Click</span>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container border border-outline-variant p-lg rounded-xl flex flex-col items-start gap-md hover:border-primary transition-colors group cursor-pointer">
+<div class="bg-primary-container/10 p-sm rounded-lg">
+<span class="material-symbols-outlined text-primary text-headline-md">palette</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md mb-xs">Restyle Image</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Transform your photos into cinematic, anime, or 3D art styles.</p>
+</div>
+<span class="bg-primary/10 text-primary px-sm py-xs rounded-full font-label-md text-label-md mt-auto group-hover:bg-primary group-hover:text-on-primary transition-colors">Pro Mode</span>
+</div>
+</section>
+<!-- Before/After Showcase -->
+<section class="bg-surface-container-low py-32 mb-32 overflow-hidden">
+<div class="px-margin-mobile md:px-margin-desktop max-w-max-width mx-auto">
+<div class="text-center mb-xl">
+<h2 class="font-headline-lg text-headline-lg mb-sm">Unmatched AI Precision</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">See how Lumina AI transforms a raw mobile photo into professional quality.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg items-center">
+<!-- Mobile: Stacked / Desktop: Side-by-Side Slider -->
+<div class="before-after-slider rounded-xl shadow-lg aspect-[4/3] relative overflow-hidden group">
+<!-- After -->
+<div class="absolute inset-0">
+<img class="w-full h-full object-cover" data-alt="A high-quality, professional editorial photograph of a modern office desk with a laptop and coffee. The lighting is warm and cinematic, the colors are vibrant and saturated, and the image is crystal clear with perfect sharpness and depth of field. The aesthetic is premium and polished, following a bright light-mode design language." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbnDIYNJlPN7DDiiJu6ns-1b6AAO3FoaQBkk4HvZkCAMbjw4PDYTJcNq_ZEmnJMFW8ue6Ur-iFCMJ35uExWrVOrsl9MbeYZbKy2rw0dKPdFdLBgveYqUUHg2hlwGsPHMukeMuotDErgWAHXYb1Ku8ggw25LrHqzTtLL4lLntjouMgtJD8HB_bypYW50ya-EFpZMwbVrF77hlXgIC34eHdDD_r9m3Om-FvsBpnisf0fTIpyGFyEAlta66zuy0nGDQBhMbokyKFyl4Ia"/>
+</div>
+<!-- Before -->
+<div class="absolute inset-0" id="before-clip" style="clip-path: inset(0 50% 0 0);">
+<img class="w-full h-full object-cover grayscale brightness-75" data-alt="A blurry, low-resolution, and poorly lit photo of a messy office desk. The colors are washed out and gray, with visible digital noise and grain. It represents a raw, unedited smartphone snapshot that needs professional AI enhancement. The overall tone is dull and unappealing." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDO9kSbO4Ki_SDVIgG_6jZEHU4Sv4ND07x9DG-2v9XGO2EL7fzVPrhtbp05Msx52SC2AhQa3pYQUW3JQtHJ8YAHItwH0VPVhHGpxZ8wvHqcxyRGZaz7-LdFSmTIwhO-77haJWHwc8VhDfEopa_Lhr3G_azz74xQXvLeVTrEXBeUBC4gNskYLXHDsiY8jNNpmbmWII_WpXMMCjOonyHMnX7FyTBPyTlJSoFz3A13-oKY4VTGGos2uSc5-dWmuvPu0hb6_UC60HPon4mK"/>
+</div>
+<div class="slider-handle" id="slider-handle"></div>
+<div class="absolute bottom-4 left-4 bg-black/40 text-white px-md py-xs rounded-full text-label-md backdrop-blur-md">Original</div>
+<div class="absolute bottom-4 right-4 bg-primary/80 text-white px-md py-xs rounded-full text-label-md backdrop-blur-md">Enhanced</div>
+</div>
+<div class="flex flex-col gap-lg pl-0 md:pl-xl">
+<div class="flex gap-md items-start">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">auto_fix_high</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md mb-xs">Intelligent Denoise</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Automatically removes ISO noise while preserving skin texture and fine details.</p>
+</div>
+</div>
+<div class="flex gap-md items-start">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">hdr_strong</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md mb-xs">Smart HDR</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Balances shadows and highlights for a wide dynamic range without artifacts.</p>
+</div>
+</div>
+<div class="flex gap-md items-start">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">color_lens</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md mb-xs">Neural Grading</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Uses professional color science to grade your images based on aesthetic trends.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- How It Works -->
+<section class="px-margin-mobile md:px-margin-desktop max-w-max-width mx-auto mb-32">
+<h2 class="font-headline-lg text-headline-lg text-center mb-16">Three Steps to Perfection</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-xl relative">
+<!-- Step 1 -->
+<div class="flex flex-col items-center text-center gap-md">
+<div class="w-16 h-16 rounded-full bg-primary text-on-primary flex items-center justify-center font-headline-md text-headline-md relative z-10 shadow-lg">1</div>
+<div class="h-1 bg-outline-variant absolute top-8 left-0 right-0 hidden md:block -z-0"></div>
+<h3 class="font-headline-md text-headline-md">Upload</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Drag and drop any JPEG, PNG, or WebP file. No size limits.</p>
+</div>
+<!-- Step 2 -->
+<div class="flex flex-col items-center text-center gap-md">
+<div class="w-16 h-16 rounded-full bg-primary text-on-primary flex items-center justify-center font-headline-md text-headline-md relative z-10 shadow-lg">2</div>
+<h3 class="font-headline-md text-headline-md">AI Edit</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Select a mode and watch Lumina process your image in real-time.</p>
+</div>
+<!-- Step 3 -->
+<div class="flex flex-col items-center text-center gap-md">
+<div class="w-16 h-16 rounded-full bg-primary text-on-primary flex items-center justify-center font-headline-md text-headline-md relative z-10 shadow-lg">3</div>
+<h3 class="font-headline-md text-headline-md">Download</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Save your high-res result instantly. No watermarks, ever.</p>
+</div>
+</div>
+</section>
+<!-- Final Call to Action -->
+<section class="px-margin-mobile md:px-margin-desktop max-w-max-width mx-auto mb-xl">
+<div class="bg-primary-container text-on-primary-container p-xl rounded-3xl text-center flex flex-col items-center gap-lg">
+<h2 class="font-headline-lg text-headline-lg">Ready to make your images weightless?</h2>
+<p class="font-body-lg text-body-lg text-on-primary-container/80 max-w-xl">
+                    Experience the future of AI editing today. Join the community of 50,000+ creators who trust Lumina.
+                </p>
+<button class="bg-surface text-primary px-xl py-md rounded-xl font-headline-md text-headline-md hover:scale-105 transition-all shadow-xl">
+                    Get Started Now
+                </button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full px-margin-mobile md:px-margin-desktop py-xl flex flex-col md:flex-row justify-between items-center gap-lg max-w-max-width mx-auto bg-surface-container dark:bg-inverse-surface border-t border-outline-variant">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-headline-md text-headline-md font-bold text-primary">Lumina AI</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            © 2024 Lumina AI. Precise. Intelligent. Weightless.
+        </p>
+<div class="flex gap-lg">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Features</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Pricing</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Terms</a>
+</div>
+</footer>
+<script>
+        // Micro-interaction for Before/After Slider
+        const slider = document.querySelector('.before-after-slider');
+        const handle = document.getElementById('slider-handle');
+        const beforeClip = document.getElementById('before-clip');
+
+        let isResizing = false;
+
+        const setPosition = (x) => {
+            const rect = slider.getBoundingClientRect();
+            let position = ((x - rect.left) / rect.width) * 100;
+            if (position < 0) position = 0;
+            if (position > 100) position = 100;
+            
+            handle.style.left = `${position}%`;
+            beforeClip.style.clipPath = `inset(0 ${100 - position}% 0 0)`;
+        };
+
+        const onMove = (e) => {
+            if (!isResizing) return;
+            const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            setPosition(x);
+        };
+
+        handle.addEventListener('mousedown', () => isResizing = true);
+        handle.addEventListener('touchstart', () => isResizing = true);
+        window.addEventListener('mouseup', () => isResizing = false);
+        window.addEventListener('touchend', () => isResizing = false);
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('touchmove', onMove);
+
+        // Hover atmosphere effect for cards
+        document.querySelectorAll('.cursor-pointer').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+                card.style.background = `radial-gradient(400px circle at ${x}px ${y}px, rgba(108, 92, 231, 0.05), transparent 40%)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.background = '';
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,24 @@
+# Cloudflare Workers env vars (local dev)
+# Copy to .dev.vars and fill in real values
+
+# REQUIRED
+SESSION_SECRET_KEY=generate_with: openssl rand -base64 32
+ADMIN_KEY=generate_with: openssl rand -hex 32
+
+# Google OAuth — configure in .env (not committed)
+# GOOGLE_OAUTH_CLIENT_ID=
+# GOOGLE_OAUTH_CLIENT_SECRET=
+
+# AI Provider — choose one
+AI_PROVIDER=cf-workers-ai
+# AI_PROVIDER=replicate
+# AI_PROVIDER=cloudinary
+
+# If using Replicate:
+# REPLICATE_API_KEY=your_r...n
+# If using Cloudinary:
+# CLOUDINARY_CLOUD_NAME=your_cloud_name
+# CLOUDINARY_API_KEY=...
+# CLOUDINARY_API_SECRET=...
+# Cloudflare Workers AI Gateway (if AI_PROVIDER=cf-workers-ai):
+# AI_GATEWAY_ENDPOINT=https://gateway.ai.cloudflare.com/v1/ACCOUNT_TAG/GATEWAY_NAME/

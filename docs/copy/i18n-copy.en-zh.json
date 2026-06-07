@@ -1,0 +1,52 @@
+{
+  "en": {
+    "homepage": {
+      "hero": {
+        "headline": "Edit Images & Copy in Seconds — No Signup Required",
+        "subhead": "RSP AI Editor helps you enhance photos, remove backgrounds, and rewrite captions in one fast workflow.",
+        "ctaPrimary": "Start Editing Free",
+        "ctaSecondary": "See How It Works"
+      }
+    },
+    "pricing": {
+      "h1": "Simple Pricing for Fast Editing",
+      "free": "Free",
+      "pro": "Pro",
+      "team": "Team",
+      "ctaFree": "Start Free",
+      "ctaPro": "Upgrade to Pro",
+      "ctaTeam": "Contact Sales"
+    },
+    "faq": {
+      "q1": "Do I need an account to start?",
+      "a1": "No. You can try core editing features before creating an account.",
+      "q2": "Are AI outputs always accurate?",
+      "a2": "No. AI outputs may vary. Please review before publishing or commercial use."
+    }
+  },
+  "zh": {
+    "homepage": {
+      "hero": {
+        "headline": "几秒完成图片与文案编辑——无需注册",
+        "subhead": "RSP AI Editor 帮你快速增强图片、去背景并改写文案，一条流程即可完成。",
+        "ctaPrimary": "免费开始编辑",
+        "ctaSecondary": "查看使用流程"
+      }
+    },
+    "pricing": {
+      "h1": "简单透明的定价",
+      "free": "免费版",
+      "pro": "专业版",
+      "team": "团队版",
+      "ctaFree": "免费开始",
+      "ctaPro": "升级到专业版",
+      "ctaTeam": "联系销售"
+    },
+    "faq": {
+      "q1": "需要先注册才能使用吗？",
+      "a1": "不需要。你可以先体验核心编辑功能，再决定是否注册。",
+      "q2": "AI 输出一定准确吗？",
+      "a2": "不一定。AI 输出质量会有波动，发布或商用前请人工复核。"
+    }
+  }
+}

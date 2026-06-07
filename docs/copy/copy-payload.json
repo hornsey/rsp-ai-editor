@@ -1,0 +1,30 @@
+{
+  "homepage": {
+    "seo": {
+      "title": "RSP AI Editor | Fast Image & Copy Editing Online",
+      "description": "Use RSP AI Editor to enhance photos, remove backgrounds, and rewrite copy in seconds. No signup required to start.",
+      "h1": "Edit Images & Copy in Seconds — No Signup Required"
+    },
+    "hero": {
+      "headline": "Edit Images & Copy in Seconds — No Signup Required",
+      "subhead": "RSP AI Editor helps you enhance photos, remove backgrounds, and rewrite captions in one fast workflow.",
+      "cta_primary": "Start Editing Free",
+      "cta_secondary": "See How It Works"
+    },
+    "problem": {
+      "title": "Most editing tools are either too complex or too limited"
+    }
+  },
+  "pricing_page": {
+    "seo": {
+      "title": "Pricing | RSP AI Editor",
+      "description": "Simple pricing for fast AI image and copy editing. Start free, upgrade when you need higher volume and HD exports.",
+      "h1": "Simple Pricing for Fast Editing"
+    },
+    "plans": {
+      "free": {"price": "$0", "cta": "Start Free"},
+      "pro": {"price_monthly": "$12/mo", "price_yearly_equivalent": "$9/mo billed yearly", "cta": "Upgrade to Pro"},
+      "team": {"price": "$39/mo", "cta": "Contact Sales"}
+    }
+  }
+}
