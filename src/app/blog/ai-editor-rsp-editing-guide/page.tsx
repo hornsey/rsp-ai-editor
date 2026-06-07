@@ -1,161 +1,160 @@
 import Link from "next/link";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "How to Use AI Editor | RSP AI Editor",
-  description: "Learn how to use the RSP AI Editor workflow to edit images and copy in seconds. Step-by-step guide with examples.",
+export const metadata: Metadata = {
+  title: "How to Use AI Editor RSP Editing Workflow | RSP AI Editor",
+  description: "Step-by-step guide to using the RSP AI Editor for fast, professional image editing without complex software. Upload, select a mode, and download in seconds.",
 };
 
-export default function BlogGuidePage() {
+export default function BlogPostPage() {
   return (
     <>
-      <Header />
-      
-      <main className="flex-1 pt-24 pb-16 px-4">
-        <article className="max-w-3xl mx-auto">
-          {/* Article Header */}
-          <header className="mb-12">
-            <div className="text-sm text-on-surface-variant mb-4">Tutorial • 5 min read</div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              How to Use AI Editor RSP Editing Workflow
-            </h1>
-            <p className="text-lg text-on-surface-variant">
-              A comprehensive guide to getting the most out of RSP AI Editor. 
-              Learn how to edit images and copy in seconds with no signup required.
-            </p>
-          </header>
+      <header className="w-full top-0 sticky z-30 bg-surface border-b border-outline-variant shadow-sm">
+        <div className="flex justify-between items-center h-16 px-6 max-w-5xl mx-auto">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary text-3xl">auto_fix_high</span>
+            <span className="text-xl font-bold text-primary">RSP AI Editor</span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-6">
+            <Link href="/features" className="text-sm text-on-surface-variant hover:text-primary">Features</Link>
+            <Link href="/pricing" className="text-sm text-on-surface-variant hover:text-primary">Pricing</Link>
+            <Link href="/editor" className="text-sm bg-primary text-on-primary px-4 py-2 rounded-lg font-medium">Start Free</Link>
+          </nav>
+        </div>
+      </header>
 
-          {/* Introduction */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-4">Introduction</h2>
-            <p className="text-on-surface-variant leading-relaxed">
-              RSP AI Editor is a powerful, free AI-powered tool that lets you edit images and 
-              copy without creating an account. Whether you need to enhance photos, remove 
-              backgrounds, or restyle your images, this guide will walk you through the process.
-            </p>
-          </section>
+      <main className="flex-1 max-w-3xl mx-auto px-4 py-12">
+        {/* Breadcrumb */}
+        <nav className="text-sm text-on-surface-variant mb-6">
+          <Link href="/" className="hover:text-primary">Home</Link>
+          <span className="mx-2">/</span>
+          <span>How to Use AI Editor RSP Editing Workflow</span>
+        </nav>
 
-          {/* Prerequisites */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-4">What You&apos;ll Need</h2>
-            <ul className="list-disc pl-6 space-y-2 text-on-surface-variant">
-              <li>A web browser (Chrome, Firefox, Safari, or Edge)</li>
-              <li>An image file (JPG, PNG, or WebP) under 10MB</li>
-              <li>No account or signup required</li>
-            </ul>
-          </section>
+        <article className="prose">
+          <h1 className="text-3xl md:text-4xl font-bold text-on-surface mb-4">
+            How to Use AI Editor RSP Editing Workflow
+          </h1>
 
-          {/* Step-by-Step Guide */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6">Step-by-Step Guide</h2>
-            
-            {/* Step 1 */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                <span className="bg-primary text-on-primary w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
-                Upload Your Image
-              </h3>
-              <p className="text-on-surface-variant mb-3">
-                Drag and drop your image onto the upload zone, or click to select a file. 
-                Supported formats include JPG, PNG, and WebP (up to 10MB).
-              </p>
-              <div className="bg-surface-container rounded-lg p-4 border border-outline-variant">
-                <p className="text-sm text-on-surface-variant">
-                  <strong>Tip:</strong> For best results, use high-resolution images. 
-                  The AI works best with photos that have clear subjects.
-                </p>
+          <p className="text-lg text-on-surface-variant mb-8">
+            A practical guide to getting professional-quality image edits in under 3 minutes — no design skills, no software installation, no signup required.
+          </p>
+
+          <h2 className="text-2xl font-bold text-on-surface mt-8 mb-4">What is RSP AI Editor?</h2>
+          <p className="text-on-surface-variant mb-4">
+            RSP AI Editor is a browser-based AI editing tool that handles common image tasks — enhancing quality, removing backgrounds, and restyling images — using artificial intelligence. It&apos;s designed for creators, small business owners, and anyone who needs quick, polished visuals without learning Photoshop or hiring a designer.
+          </p>
+
+          <h2 className="text-2xl font-bold text-on-surface mt-8 mb-4">Getting Started in 3 Steps</h2>
+
+          <div className="space-y-6">
+            <div className="bg-surface-container rounded-xl p-6 border border-outline-variant">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-lg shrink-0">1</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-on-surface mb-2">Upload Your Image</h3>
+                  <p className="text-sm text-on-surface-variant">
+                    Drag and drop any JPG, PNG, or WebP file directly onto the editor, or click to browse. Maximum file size is 10MB. The upload is instant — no account needed.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Step 2 */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                <span className="bg-primary text-on-primary w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
-                Choose Your Editing Mode
-              </h3>
-              <p className="text-on-surface-variant mb-3">
-                Select one of three AI-powered editing modes:
-              </p>
-              <ul className="list-disc pl-6 space-y-2 text-on-surface-variant">
-                <li><strong>Auto Enhance:</strong> Automatically improves lighting, color, and clarity</li>
-                <li><strong>Background Remove:</strong> Creates perfect cutouts with one click</li>
-                <li><strong>Restyle:</strong> Applies artistic transformations to your image</li>
-              </ul>
-            </div>
-
-            {/* Step 3 */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                <span className="bg-primary text-on-primary w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
-                Apply and Preview
-              </h3>
-              <p className="text-on-surface-variant">
-                Click &quot;Apply&quot; to start the AI processing. Results are typically ready in
-                under 8 seconds. You can compare the before and after versions directly in the editor.
-              </p>
-            </div>
-
-            {/* Step 4 */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                <span className="bg-primary text-on-primary w-8 h-8 rounded-full flex items-center justify-center text-sm">4</span>
-                Download Your Result
-              </h3>
-              <p className="text-on-surface-variant">
-                Click the download button to save your edited image. Free users get 
-                standard quality exports. Pro users enjoy HD exports without watermarks.
-              </p>
-            </div>
-          </section>
-
-          {/* Common Issues */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-4">Common Issues & Solutions</h2>
-            
-            <div className="space-y-4">
-              <div className="bg-surface-container rounded-lg p-4">
-                <h4 className="font-semibold mb-2">Image won&apos;t upload</h4>
-                <p className="text-sm text-on-surface-variant">
-                  Check that your file is under 10MB and in JPG, PNG, or WebP format.
-                </p>
-              </div>
-              
-              <div className="bg-surface-container rounded-lg p-4">
-                <h4 className="font-semibold mb-2">Processing takes too long</h4>
-                <p className="text-sm text-on-surface-variant">
-                  Processing time depends on server load and image size. Try a smaller image 
-                  or upgrade to Pro for priority processing.
-                </p>
-              </div>
-              
-              <div className="bg-surface-container rounded-lg p-4">
-                <h4 className="font-semibold mb-2">Quality not satisfactory</h4>
-                <p className="text-sm text-on-surface-variant">
-                  Upload higher resolution images for better results. Each AI mode has 
-                  different optimal use cases—experiment to find what works best for your content.
-                </p>
+            <div className="bg-surface-container rounded-xl p-6 border border-outline-variant">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-lg shrink-0">2</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-on-surface mb-2">Choose Your Editing Mode</h3>
+                  <p className="text-sm text-on-surface-variant mb-3">Pick the mode that matches your goal:</p>
+                  <ul className="space-y-2">
+                    <li className="flex items-center gap-2 text-sm text-on-surface">
+                      <span className="material-symbols-outlined text-primary text-base">colors_spark</span>
+                      <strong>Auto Enhance</strong> — Fix lighting, color, and clarity automatically
+                    </li>
+                    <li className="flex items-center gap-2 text-sm text-on-surface">
+                      <span className="material-symbols-outlined text-primary text-base">auto_fix_high</span>
+                      <strong>Background Remove</strong> — Get a clean cutout in one click
+                    </li>
+                    <li className="flex items-center gap-2 text-sm text-on-surface">
+                      <span className="material-symbols-outlined text-primary text-base">palette</span>
+                      <strong>Restyle</strong> — Transform your photo into artistic styles
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
-          </section>
+
+            <div className="bg-surface-container rounded-xl p-6 border border-outline-variant">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-lg shrink-0">3</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-on-surface mb-2">Download Your Result</h3>
+                  <p className="text-sm text-on-surface-variant">
+                    Preview the AI-generated result and download immediately. Free users get standard quality. Pro users unlock HD export with no watermarks.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-bold text-on-surface mt-8 mb-4">Common Mistakes and How to Avoid Them</h2>
+
+          <div className="space-y-3 mb-6">
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-error text-lg shrink-0 mt-0.5">cancel</span>
+              <div>
+                <p className="text-sm font-medium text-on-surface">Uploading files over 10MB</p>
+                <p className="text-xs text-on-surface-variant">Compress your image first using any free online tool before uploading.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-error text-lg shrink-0 mt-0.5">cancel</span>
+              <div>
+                <p className="text-sm font-medium text-on-surface">Using screenshots instead of photos</p>
+                <p className="text-xs text-on-surface-variant">Screenshots have compression artifacts. For best AI results, use original camera photos.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-primary text-lg shrink-0 mt-0.5">check_circle</span>
+              <div>
+                <p className="text-sm font-medium text-on-surface">Starting with a well-lit photo</p>
+                <p className="text-xs text-on-surface-variant">Even low-quality photos improve significantly, but well-lit originals yield professional-grade results.</p>
+              </div>
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-bold text-on-surface mt-8 mb-4">When to Upgrade to Pro</h2>
+          <p className="text-on-surface-variant mb-4">
+            The Free plan gives you 10 edits per day — enough to try the tool and handle occasional tasks. Upgrade to Pro when you need:
+          </p>
+          <ul className="list-disc pl-6 space-y-2 text-on-surface-variant mb-8">
+            <li>Unlimited daily edits for regular content production</li>
+            <li>HD-quality export without watermarks for client or commercial use</li>
+            <li>Batch processing up to 10 images at once</li>
+            <li>Priority processing speed during high-traffic periods</li>
+          </ul>
 
           {/* CTA */}
-          <section className="bg-primary-container text-on-primary-container rounded-2xl p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Ready to Get Started?</h2>
-            <p className="text-on-primary-container/80 mb-6">
-              Try RSP AI Editor now—it&apos;s free, instant, and requires no signup.
-            </p>
-            <Link
-              href="/editor"
-              className="inline-block bg-surface text-primary px-8 py-4 rounded-xl font-semibold hover:opacity-90 transition-opacity"
-            >
-              Open the Editor
+          <div className="bg-primary-container text-on-primary-container rounded-2xl p-8 text-center">
+            <h3 className="text-2xl font-bold mb-3">Ready to try it yourself?</h3>
+            <p className="text-sm text-on-primary-container/80 mb-6">No signup, no credit card — open the editor and make your first edit in 30 seconds.</p>
+            <Link href="/editor" className="inline-block bg-primary text-on-primary px-8 py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition-all">
+              Open the Editor — It&apos;s Free
             </Link>
-          </section>
+          </div>
         </article>
       </main>
-      
-      <Footer />
+
+      <footer className="py-8 px-6 border-t border-outline-variant">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-on-surface-variant">© 2024 RSP AI Editor</p>
+          <nav className="flex gap-4">
+            <Link href="/terms" className="text-sm text-on-surface-variant hover:text-primary">Terms</Link>
+            <Link href="/privacy" className="text-sm text-on-surface-variant hover:text-primary">Privacy</Link>
+            <Link href="/editor" className="text-sm text-primary hover:underline">Editor</Link>
+          </nav>
+        </div>
+      </footer>
     </>
   );
 }
