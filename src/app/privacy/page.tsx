@@ -1,6 +1,3 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-
 export const metadata = {
   title: "Privacy Policy | RSP AI Editor",
   description: "RSP AI Editor Privacy Policy - How we collect, use, and protect your data.",
@@ -8,10 +5,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <>
-      <Header />
-      
-      <main className="flex-1 pt-24 pb-16 px-4 max-w-3xl mx-auto">
+    <main className="app-shell max-w-3xl flex-1 py-12">
         <h1 className="text-3xl md:text-4xl font-bold mb-8">Privacy Policy</h1>
         
         <div className="prose prose-lg max-w-none text-on-surface-variant">
@@ -53,8 +47,5 @@ export default function PrivacyPage() {
           <p>Questions about this Privacy Policy: <a href="mailto:[SUPPORT_EMAIL]" className="text-primary hover:underline">[SUPPORT_EMAIL]</a></p>
         </div>
       </main>
-      
-      <Footer />
-    </>
   );
 }

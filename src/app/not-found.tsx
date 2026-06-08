@@ -1,6 +1,4 @@
 import Link from "next/link";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 
 export const metadata = {
   title: "Page Not Found | RSP AI Editor",
@@ -9,10 +7,7 @@ export const metadata = {
 
 export default function NotFound() {
   return (
-    <>
-      <Header />
-      
-      <main className="flex-1 flex items-center justify-center px-4">
+    <main className="app-shell flex flex-1 items-center justify-center px-4 py-20">
         <div className="text-center">
           <div className="mb-6">
             <span className="material-symbols-outlined text-primary text-8xl">search_off</span>
@@ -26,21 +21,18 @@ export default function NotFound() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/"
-              className="bg-primary text-on-primary px-6 py-3 rounded-xl font-medium hover:opacity-90 transition-opacity"
+              className="primary-button"
             >
               Back to Home
             </Link>
             <Link
               href="/editor"
-              className="bg-surface-container text-on-surface px-6 py-3 rounded-xl font-medium hover:bg-surface-container-high transition-colors"
+              className="secondary-button"
             >
               Open Editor
             </Link>
           </div>
         </div>
       </main>
-      
-      <Footer />
-    </>
   );
 }

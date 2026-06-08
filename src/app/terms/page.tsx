@@ -1,6 +1,3 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-
 export const metadata = {
   title: "Terms of Service | RSP AI Editor",
   description: "RSP AI Editor Terms of Service - Your rights and responsibilities when using our service.",
@@ -8,10 +5,7 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <>
-      <Header />
-      
-      <main className="flex-1 pt-24 pb-16 px-4 max-w-3xl mx-auto">
+    <main className="app-shell max-w-3xl flex-1 py-12">
         <h1 className="text-3xl md:text-4xl font-bold mb-8">Terms of Service</h1>
         
         <div className="prose prose-lg max-w-none text-on-surface-variant">
@@ -64,8 +58,5 @@ export default function TermsPage() {
           <p>Questions about these Terms: <a href="mailto:[SUPPORT_EMAIL]" className="text-primary hover:underline">[SUPPORT_EMAIL]</a></p>
         </div>
       </main>
-      
-      <Footer />
-    </>
   );
 }

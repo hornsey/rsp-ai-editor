@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const STORAGE_KEY = "rsp_editor_history";
 
@@ -29,23 +29,21 @@ function saveHistory(items: HistoryItem[]) {
 }
 
 export default function HistoryPanel() {
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>(() => getHistory());
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    setHistory(getHistory());
-  }, []);
-
-  const addToHistory = (item: Omit<HistoryItem, "id" | "timestamp">) => {
+  const addToHistory = useCallback((item: Omit<HistoryItem, "id" | "timestamp">) => {
     const newItem: HistoryItem = {
       ...item,
       id: Math.random().toString(36).slice(2),
       timestamp: Date.now(),
     };
-    const updated = [...history, newItem];
-    setHistory(updated);
-    saveHistory(updated);
-  };
+    setHistory((current) => {
+      const updated = [...current, newItem];
+      saveHistory(updated);
+      return updated.slice(-10);
+    });
+  }, []);
 
   const clearHistory = () => {
     setHistory([]);
@@ -53,10 +51,10 @@ export default function HistoryPanel() {
   };
 
   const formatTime = (ts: number) => {
-    const diff = Date.now() - ts;
-    if (diff < 60000) return "Just now";
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    return `${Math.floor(diff / 3600000)}h ago`;
+    const date = new Date(ts);
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
   };
 
   const modeLabel: Record<string, string> = {
@@ -68,7 +66,7 @@ export default function HistoryPanel() {
   // Expose addToHistory globally so editor page can call it
   useEffect(() => {
     (window as unknown as { __rspAddHistory: typeof addToHistory }).__rspAddHistory = addToHistory;
-  }, [history]);
+  }, [addToHistory]);
 
   return (
     <>
