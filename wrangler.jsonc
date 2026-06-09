@@ -3,5 +3,9 @@
   "name": "rsp-ai-editor",
   "compatibility_date": "2026-06-02",
   "compatibility_flags": ["nodejs_compat"],
-  "main": ".open-next/worker.js"
+  "main": ".open-next/worker.js",
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  }
 }

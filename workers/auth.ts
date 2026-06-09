@@ -1,18 +1,24 @@
 // Google OAuth — login flow + callback
-// Flow: /api/auth/google → redirect to Google → /api/auth/callback/google → set session cookie
+// Flow: /api/v1/auth/google → redirect to Google → /api/v1/auth/callback/google → set session cookie
 
 import type { Env } from "./env";
-import { signToken } from "./session";
+import { signToken, verifyToken } from "./session";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
+const DEFAULT_FRONTEND_URL = "https://image-editor.co/editor";
 
 export interface GoogleUserInfo {
   id: string;
   email: string;
   name: string;
   picture: string;
+}
+
+interface OAuthState {
+  returnTo: string;
+  redirectUri: string;
 }
 
 function getOAuthConfig(env: Env) {
@@ -22,11 +28,40 @@ function getOAuthConfig(env: Env) {
   return { clientId, clientSecret };
 }
 
-function buildAuthUrl(env: Env, state: string): string {
+function getRedirectUri(req: Request): string {
+  const url = new URL(req.url);
+  // Keep the callback path aligned with the URI that was originally configured
+  // in Google Cloud Console for this project.
+  return `${url.origin}/api/auth/callback/google`;
+}
+
+function getSafeReturnTo(req: Request): string {
+  const url = new URL(req.url);
+  const raw = url.searchParams.get("return_to") || DEFAULT_FRONTEND_URL;
+
+  try {
+    const returnUrl = new URL(raw);
+    const allowedHosts = new Set([
+      "image-editor.co",
+      "www.image-editor.co",
+      "rsp-ai-editor.sempron450.workers.dev",
+      "localhost",
+      "127.0.0.1",
+    ]);
+
+    if (allowedHosts.has(returnUrl.hostname)) return returnUrl.toString();
+  } catch {
+    // Fall through to default.
+  }
+
+  return DEFAULT_FRONTEND_URL;
+}
+
+function buildAuthUrl(env: Env, state: string, redirectUri: string): string {
   const { clientId } = getOAuthConfig(env);
   const params = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: `https://api.image-editor.co/api/auth/callback/google`,
+    redirect_uri: redirectUri,
     response_type: "code",
     scope: "openid email profile",
     state,
@@ -36,7 +71,7 @@ function buildAuthUrl(env: Env, state: string): string {
   return `${GOOGLE_AUTH_URL}?${params}`;
 }
 
-async function exchangeCode(code: string, env: Env): Promise<{ access_token: string; id_token: string }> {
+async function exchangeCode(code: string, env: Env, redirectUri: string): Promise<{ access_token: string; id_token: string }> {
   const { clientId, clientSecret } = getOAuthConfig(env);
   const resp = await fetch(GOOGLE_TOKEN_URL, {
     method: "POST",
@@ -45,7 +80,7 @@ async function exchangeCode(code: string, env: Env): Promise<{ access_token: str
       code,
       client_id: clientId,
       client_secret: clientSecret,
-      redirect_uri: `https://api.image-editor.co/api/auth/callback/google`,
+      redirect_uri: redirectUri,
       grant_type: "authorization_code",
     }),
   });
@@ -61,20 +96,35 @@ async function getGoogleUserInfo(accessToken: string): Promise<GoogleUserInfo> {
   return resp.json() as Promise<GoogleUserInfo>;
 }
 
-// Generate a random state parameter for CSRF protection
 function generateState(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
-  return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// ── Login handler ─────────────────────────────────────────────────────────
-export async function handleGoogleLogin(env: Env): Promise<Response> {
-  const state = generateState();
-  const authUrl = buildAuthUrl(env, state);
+function sessionCookie(token: string): string {
+  const maxAge = 30 * 24 * 60 * 60;
+  return `rsp_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+}
 
-  // Store state in KV for 10 min validation
-  const kv = env.SESSIONS;
-  await kv.put(`oauth_state:${state}`, "pending", { expirationTtl: 600 });
+function clearSessionCookie(): string {
+  return "rsp_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
+}
+
+function redirectWithStatus(returnTo: string, status: "success" | "error", reason?: string): Response {
+  const url = new URL(returnTo);
+  url.searchParams.set("auth", status);
+  if (reason) url.searchParams.set("reason", reason);
+  return new Response(null, { status: 302, headers: { Location: url.toString() } });
+}
+
+export async function handleGoogleLogin(req: Request, env: Env): Promise<Response> {
+  const state = generateState();
+  const redirectUri = getRedirectUri(req);
+  const returnTo = getSafeReturnTo(req);
+  const authUrl = buildAuthUrl(env, state, redirectUri);
+
+  const payload: OAuthState = { returnTo, redirectUri };
+  await env.SESSIONS.put(`oauth_state:${state}`, JSON.stringify(payload), { expirationTtl: 600 });
 
   return new Response(null, {
     status: 302,
@@ -82,57 +132,40 @@ export async function handleGoogleLogin(env: Env): Promise<Response> {
   });
 }
 
-// ── Callback handler ───────────────────────────────────────────────────────
-export async function handleGoogleCallback(
-  req: Request,
-  env: Env
-): Promise<Response> {
+export async function handleGoogleCallback(req: Request, env: Env): Promise<Response> {
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   const error = url.searchParams.get("error");
 
-  if (error) {
-    return new Response(`OAuth error: ${error}`, { status: 400 });
-  }
-  if (!code || !state) {
-    return new Response("Missing code or state", { status: 400 });
-  }
+  const defaultReturnTo = DEFAULT_FRONTEND_URL;
+  if (error) return redirectWithStatus(defaultReturnTo, "error", error);
+  if (!code || !state) return redirectWithStatus(defaultReturnTo, "error", "missing_code_or_state");
 
-  // Validate state (CSRF protection)
-  const kv = env.SESSIONS;
-  const storedState = await kv.get(`oauth_state:${state}`);
-  if (storedState !== "pending") {
-    return new Response("Invalid or expired state", { status: 400 });
-  }
-  await kv.delete(`oauth_state:${state}`);
+  const storedState = await env.SESSIONS.get(`oauth_state:${state}`);
+  if (!storedState) return redirectWithStatus(defaultReturnTo, "error", "invalid_or_expired_state");
+  await env.SESSIONS.delete(`oauth_state:${state}`);
 
-  // Exchange code for tokens
-  const tokens = await exchangeCode(code, env);
-
-  // Get Google user info
+  const oauthState = JSON.parse(storedState) as OAuthState;
+  const tokens = await exchangeCode(code, env, oauthState.redirectUri);
   const googleUser = await getGoogleUserInfo(tokens.access_token);
 
-  // Upsert session in D1 (link google_id to session)
   const db = env.DB;
   const now = Date.now();
-  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
 
-  // Check if this Google user already has a session
   const existing = await db
-    .prepare("SELECT session_id FROM sessions WHERE google_id = ?")
+    .prepare("SELECT id FROM sessions WHERE google_id = ?")
     .bind(googleUser.id)
-    .first();
+    .first<{ id: string }>();
 
   let sessionId: string;
   if (existing) {
-    sessionId = existing.session_id as string;
+    sessionId = existing.id;
     await db
       .prepare("UPDATE sessions SET updated_at = ?, name = ?, picture = ? WHERE id = ?")
       .bind(now, googleUser.name, googleUser.picture, sessionId)
       .run();
   } else {
-    // Create new session
     sessionId = crypto.randomUUID();
     await db
       .prepare(
@@ -143,56 +176,88 @@ export async function handleGoogleCallback(
       .run();
   }
 
-  // Sign and set session cookie
   const token = await signToken(sessionId, env);
-  const cookie = `rsp_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${thirtyDays / 1000}`;
+  const redirect = redirectWithStatus(oauthState.returnTo, "success");
+  redirect.headers.append("Set-Cookie", sessionCookie(token));
+  return redirect;
+}
 
-  // Redirect to frontend
-  return new Response(null, {
-    status: 302,
+export async function handleAuthMe(req: Request, env: Env): Promise<Response> {
+  const token = req.headers.get("Cookie")?.match(/rsp_session=([^;]+)/)?.[1]
+    || req.headers.get("X-Session-ID");
+
+  if (!token) {
+    return new Response(JSON.stringify({ ok: true, data: { authenticated: false } }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const result = await verifyToken(token, env);
+  if (!result.valid) {
+    return new Response(JSON.stringify({ ok: true, data: { authenticated: false } }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const row = await env.DB
+    .prepare("SELECT id, google_id, plan, edits_used, edits_limit, resets_at, name, picture FROM sessions WHERE id = ?")
+    .bind(result.sessionId)
+    .first();
+
+  if (!row) {
+    return new Response(JSON.stringify({ ok: true, data: { authenticated: false } }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  return new Response(JSON.stringify({
+    ok: true,
+    data: {
+      authenticated: Boolean(row.google_id),
+      session_id: row.id,
+      plan: row.plan,
+      edits_used: row.edits_used,
+      edits_limit: row.edits_limit,
+      resets_at: row.resets_at,
+      user: row.google_id ? { name: row.name, picture: row.picture } : null,
+    },
+  }), { headers: { "Content-Type": "application/json" } });
+}
+
+export async function handleLogout(): Promise<Response> {
+  return new Response(JSON.stringify({ ok: true, data: { logged_out: true } }), {
     headers: {
-      Location: "https://image-editor.co/editor",
-      "Set-Cookie": cookie,
+      "Content-Type": "application/json",
+      "Set-Cookie": clearSessionCookie(),
     },
   });
 }
 
-// ── Link Google account to existing anonymous session ──────────────────────
-// POST /api/auth/link-google { code, state }
-export async function handleLinkGoogle(
-  req: Request,
-  env: Env
-): Promise<Response> {
-  // Require existing session
-  const cookieHeader = req.headers.get("Cookie") || "";
-  const tokenMatch = cookieHeader.match(/rsp_session=([^;]+)/);
+export async function handleLinkGoogle(req: Request, env: Env): Promise<Response> {
+  const tokenMatch = (req.headers.get("Cookie") || "").match(/rsp_session=([^;]+)/);
   if (!tokenMatch) return new Response("Unauthorized", { status: 401 });
 
-  const { verifyToken } = await import("./session");
   const result = await verifyToken(tokenMatch[1], env);
   if (!result.valid) return new Response("Invalid session", { status: 401 });
 
   const body = await req.json() as { code: string; state: string };
   if (!body.code || !body.state) return new Response("Missing code or state", { status: 400 });
 
-  // Validate state
-  const kv = env.SESSIONS;
-  const storedState = await kv.get(`oauth_state:${body.state}`);
-  if (storedState !== "pending") return new Response("Invalid state", { status: 400 });
-  await kv.delete(`oauth_state:${body.state}`);
+  const storedState = await env.SESSIONS.get(`oauth_state:${body.state}`);
+  if (!storedState) return new Response("Invalid state", { status: 400 });
+  await env.SESSIONS.delete(`oauth_state:${body.state}`);
 
-  const tokens = await exchangeCode(body.code, env);
+  const oauthState = JSON.parse(storedState) as OAuthState;
+  const tokens = await exchangeCode(body.code, env, oauthState.redirectUri);
   const googleUser = await getGoogleUserInfo(tokens.access_token);
-  const db = env.DB;
 
-  // Check if Google ID already linked to another session
-  const conflict = await db
+  const conflict = await env.DB
     .prepare("SELECT id FROM sessions WHERE google_id = ? AND id != ?")
     .bind(googleUser.id, result.sessionId)
     .first();
   if (conflict) return new Response("Google account already linked to another session", { status: 409 });
 
-  await db
+  await env.DB
     .prepare("UPDATE sessions SET google_id = ?, updated_at = ?, name = ?, picture = ? WHERE id = ?")
     .bind(googleUser.id, Date.now(), googleUser.name, googleUser.picture, result.sessionId)
     .run();

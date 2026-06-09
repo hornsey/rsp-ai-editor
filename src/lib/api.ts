@@ -2,6 +2,10 @@
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.image-editor.co";
 
+export function getApiBase(): string {
+  return API_BASE;
+}
+
 function getSessionCookie(): string | null {
   if (typeof document === "undefined") return null;
   const match = document.cookie.match(/rsp_session=([^;]+)/);
@@ -19,7 +23,7 @@ async function request<T>(
   };
   if (cookie) headers["X-Session-ID"] = cookie;
 
-  const res = await fetch(`${API_BASE}/api/v1${path}`, {
+  const res = await fetch(`${getApiBase()}/api/v1${path}`, {
     ...options,
     headers,
     credentials: "include",
@@ -41,6 +45,20 @@ export async function getUsage(): Promise<UsageData> {
   return request<UsageData>("/session/usage");
 }
 
+// ── Auth ──────────────────────────────────────────────────────────────────
+export function getGoogleLoginUrl(returnTo?: string): string {
+  const target = returnTo || (typeof window !== "undefined" ? window.location.href : "https://image-editor.co/editor");
+  return `${getApiBase()}/api/v1/auth/google?return_to=${encodeURIComponent(target)}`;
+}
+
+export async function getAuthMe(): Promise<AuthMeData> {
+  return request<AuthMeData>("/auth/me");
+}
+
+export async function logout(): Promise<{ logged_out: boolean }> {
+  return request<{ logged_out: boolean }>("/auth/logout", { method: "POST" });
+}
+
 // ── Edit ─────────────────────────────────────────────────────────────────
 export async function submitEdit(
   mode: "enhance" | "remove-bg" | "restyle",
@@ -53,7 +71,7 @@ export async function submitEdit(
   const headers: Record<string, string> = {};
   if (cookie) headers["X-Session-ID"] = cookie;
 
-  const res = await fetch(`${API_BASE}/api/v1/edit/${mode}`, {
+  const res = await fetch(`${getApiBase()}/api/v1/edit/${mode}`, {
     method: "POST",
     headers,
     body: formData,
@@ -94,6 +112,19 @@ export interface UsageData {
   edits_used: number;
   edits_limit: number;
   resets_at: number;
+}
+
+export interface AuthMeData {
+  authenticated: boolean;
+  session_id?: string;
+  plan?: string;
+  edits_used?: number;
+  edits_limit?: number;
+  resets_at?: number;
+  user?: {
+    name?: string | null;
+    picture?: string | null;
+  } | null;
 }
 
 export interface EditStatus {

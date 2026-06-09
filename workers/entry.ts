@@ -2,7 +2,7 @@
 import { signToken, verifyToken } from "./session";
 import { getD1, checkEntitlement, consumeCredit, checkRateLimit } from "./db";
 import { runAIEdit } from "./ai";
-import { handleGoogleLogin, handleGoogleCallback, handleLinkGoogle } from "./auth";
+import { handleGoogleLogin, handleGoogleCallback, handleAuthMe, handleLogout, handleLinkGoogle } from "./auth";
 import type { Env } from "./env";
 import type { EditMode } from "./schema";
 
@@ -16,6 +16,53 @@ function json(data: unknown, status = 200): Response {
 
 function error(msg: string, code = 400): Response {
   return json({ ok: false, error: msg, code }, code);
+}
+
+function getCorsOrigin(req: Request): string | null {
+  const origin = req.headers.get("Origin");
+  if (!origin) return null;
+
+  try {
+    const host = new URL(origin).hostname;
+    const allowedHosts = new Set([
+      "image-editor.co",
+      "www.image-editor.co",
+      "rsp-ai-editor.sempron450.workers.dev",
+      "localhost",
+      "127.0.0.1",
+    ]);
+    return allowedHosts.has(host) ? origin : null;
+  } catch {
+    return null;
+  }
+}
+
+function withCors(req: Request, res: Response): Response {
+  const origin = getCorsOrigin(req);
+  if (!origin) return res;
+
+  const headers = new Headers(res.headers);
+  headers.set("Access-Control-Allow-Origin", origin);
+  headers.set("Access-Control-Allow-Credentials", "true");
+  headers.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  headers.set("Access-Control-Allow-Headers", "Content-Type,X-Session-ID,X-Admin-Key");
+  headers.append("Vary", "Origin");
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
+
+function corsPreflight(req: Request): Response {
+  const origin = getCorsOrigin(req);
+  return new Response(null, {
+    status: origin ? 204 : 403,
+    headers: origin ? {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Credentials": "true",
+      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type,X-Session-ID,X-Admin-Key",
+      "Access-Control-Max-Age": "86400",
+      "Vary": "Origin",
+    } : undefined,
+  });
 }
 
 // ── /api/v1/session/init ──────────────────────────────────────────────────
@@ -308,33 +355,34 @@ async function signAndEncode(sessionId: string, env: Env): Promise<string> {
 // ── Router ────────────────────────────────────────────────────────────────
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
+    if (req.method === "OPTIONS") return corsPreflight(req);
+
     const url = new URL(req.url);
     const path = url.pathname.replace("/api/v1", "");
 
     try {
-      if (path === "/session/init" && req.method === "POST") return handleSessionInit(env);
-      if (path === "/session/usage" && req.method === "GET") return handleSessionUsage(req, env);
+      let response: Response;
 
-      if (path.match(/^\/edit\/(enhance|remove-bg|restyle)$/) && req.method === "POST") {
+      if (path === "/session/init" && req.method === "POST") response = await handleSessionInit(env);
+      else if (path === "/session/usage" && req.method === "GET") response = await handleSessionUsage(req, env);
+      else if (path.match(/^\/edit\/(enhance|remove-bg|restyle)$/) && req.method === "POST") {
         const mode = path.split("/").pop() as EditMode;
-        return handleEdit(req, env, mode);
-      }
-      if (path.match(/^\/edit\/[a-f0-9-]+$/) && req.method === "GET") {
-        return handleEditStatus(req, env);
-      }
+        response = await handleEdit(req, env, mode);
+      } else if (path.match(/^\/edit\/[a-f0-9-]+$/) && req.method === "GET") {
+        response = await handleEditStatus(req, env);
+      } else if (path === "/copy/rewrite" && req.method === "POST") response = await handleCopyRewrite(req, env);
+      else if (path === "/admin/grant" && req.method === "POST") response = await handleAdminGrant(req, env);
+      else if (path === "/auth/google" && req.method === "GET") response = await handleGoogleLogin(req, env);
+      else if ((path === "/auth/callback/google" || url.pathname === "/api/auth/callback/google") && req.method === "GET") response = await handleGoogleCallback(req, env);
+      else if (path === "/auth/me" && req.method === "GET") response = await handleAuthMe(req, env);
+      else if (path === "/auth/logout" && req.method === "POST") response = await handleLogout();
+      else if (path === "/auth/link-google" && req.method === "POST") response = await handleLinkGoogle(req, env);
+      else response = error("Not found", 404);
 
-      if (path === "/copy/rewrite" && req.method === "POST") return handleCopyRewrite(req, env);
-      if (path === "/admin/grant" && req.method === "POST") return handleAdminGrant(req, env);
-
-      // ── Auth routes ───────────────────────────────────────────────────────
-      if (path === "/auth/google" && req.method === "GET") return handleGoogleLogin(env);
-      if (path === "/auth/callback/google" && req.method === "GET") return handleGoogleCallback(req, env);
-      if (path === "/auth/link-google" && req.method === "POST") return handleLinkGoogle(req, env);
-
-      return error("Not found", 404);
+      return withCors(req, response);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      return json({ ok: false, error: msg, code: 500 }, 500);
+      return withCors(req, json({ ok: false, error: msg, code: 500 }, 500));
     }
   },
 };

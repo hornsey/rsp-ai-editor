@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
+import { getAuthMe, logout, type AuthMeData } from "@/lib/api";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home" },
@@ -14,6 +16,42 @@ const NAV_ITEMS = [
 export default function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [auth, setAuth] = useState<AuthMeData | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAuthMe()
+      .then((data) => {
+        if (!cancelled) setAuth(data);
+      })
+      .catch(() => {
+        if (!cancelled) setAuth({ authenticated: false });
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    setAuth({ authenticated: false });
+  };
+
+  const authControl = auth?.authenticated ? (
+    <div className="hidden items-center gap-2 md:flex">
+      {auth.user?.picture ? (
+        <img src={auth.user.picture} alt="Google profile" className="h-8 w-8 rounded-full border border-outline-variant" />
+      ) : null}
+      <span className="max-w-28 truncate text-sm font-bold text-on-surface">
+        {auth.user?.name || "Signed in"}
+      </span>
+      <button type="button" onClick={handleLogout} className="text-sm font-bold text-on-surface-variant hover:text-primary">
+        Sign out
+      </button>
+    </div>
+  ) : (
+    <div className="hidden md:block">
+      <GoogleLoginButton compact />
+    </div>
+  );
 
   return (
     <header className="sticky top-0 z-50 border-b border-outline-variant bg-background/90 backdrop-blur">
@@ -45,6 +83,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {authControl}
           <Link href="/editor" className="primary-button hidden px-4 py-2 text-sm sm:inline-flex">
             <span className="material-symbols-outlined text-lg">bolt</span>
             Start Free
@@ -73,6 +112,13 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+            {auth?.authenticated ? (
+              <button type="button" onClick={handleLogout} className="secondary-button mt-2 text-sm">
+                Sign out
+              </button>
+            ) : (
+              <GoogleLoginButton compact className="secondary-button mt-2 text-sm" />
+            )}
             <Link href="/editor" className="primary-button mt-2 text-sm" onClick={() => setMobileMenuOpen(false)}>
               Open Editor
             </Link>

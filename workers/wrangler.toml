@@ -4,6 +4,10 @@ main = "entry.ts"
 compatibility_date = "2026-06-02"
 compatibility_flags = ["nodejs_compat"]
 
+routes = [
+  { pattern = "api.image-editor.co/*", zone_name = "image-editor.co" }
+]
+
 # D1 binding
 [[d1_databases]]
 binding = "DB"
