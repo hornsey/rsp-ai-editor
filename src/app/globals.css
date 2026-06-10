@@ -79,15 +79,27 @@ textarea {
   font: inherit;
 }
 
-.material-symbols-outlined {
+.material-symbols-outlined,
+.material-icons {
   direction: ltr;
   display: inline-block;
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  font-feature-settings: "liga";
+  font-style: normal;
+  font-weight: normal;
   letter-spacing: normal;
   line-height: 1;
   text-transform: none;
   white-space: nowrap;
   word-wrap: normal;
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined", "Material Icons";
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.material-icons {
+  font-family: "Material Icons";
 }
 
 .app-shell {
