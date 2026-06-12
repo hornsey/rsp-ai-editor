@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 const features = [
   {
-    icon: "colors_spark",
+    icon: "auto_awesome",
     title: "Auto Enhance",
     description: "Improve clarity, lighting, and color for everyday photos without tuning dozens of sliders.",
     fit: "Best for creator thumbnails, profile images, blog graphics, and quick polish before publishing.",
