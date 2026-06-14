@@ -33,4 +33,14 @@ binding = "OUTPUTS"
 bucket_name = "image-editor-assets"
 
 [vars]
-AI_PROVIDER = "cf-workers-ai"
+# AI provider selection
+# "fal"             → fal.ai GPT Image 2 (RECOMMENDED — real implementation ready)
+# "cf-workers-ai"   → Cloudflare Workers AI (placeholder, model TBD)
+# "replicate"       → Replicate (placeholder, model/version TBD)
+# "cloudinary"      → Cloudinary (placeholder, transform TBD)
+AI_PROVIDER = "fal"
+
+# FAL_KEY is the fal.ai API key.
+# Set via: npx wrangler secret put FAL_KEY
+# (value stored in Cloudflare, never in code or wrangler.toml)
+FAL_KEY = ""

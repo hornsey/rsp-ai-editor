@@ -27,4 +27,5 @@ export interface Env {
   CLOUDINARY_API_KEY?: string;
   CLOUDINARY_API_SECRET?: string;
   AI_GATEWAY_ENDPOINT?: string;
+  FAL_KEY?: string;
 }

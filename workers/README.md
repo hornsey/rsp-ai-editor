@@ -19,12 +19,19 @@ wrangler r2 bucket create rsp-outputs
 wrangler secret put SESSION_SECRET_KEY
 wrangler secret put ADMIN_KEY
 
-# 5. 配置 AI Provider（选一）
-# 方案 A：Cloudflare Workers AI
+# 5. 配置 AI Provider（fal.ai 已上线，其他方案备选）
+
+# 方案 A：fal.ai GPT Image 2（推荐，已实现）
+# fal.ai API Key: https://fal.ai/dashboard/api-keys
+wrangler secret put FAL_KEY
+
+# 方案 B：Cloudflare Workers AI（待实现）
 wrangler secret put AI_GATEWAY_ENDPOINT
-# 方案 B：Replicate
+
+# 方案 C：Replicate（待实现）
 wrangler secret put REPLICATE_API_KEY
-# 方案 C：Cloudinary
+
+# 方案 D：Cloudinary（待实现）
 wrangler secret put CLOUDINARY_CLOUD_NAME
 wrangler secret put CLOUDINARY_API_KEY
 wrangler secret put CLOUDINARY_API_SECRET
@@ -63,10 +70,30 @@ wrangler dev --config workers/wrangler.toml --local
 |------|------|------|
 | `SESSION_SECRET_KEY` | ✅ | HMAC 签名密钥，32+ 字符：`openssl rand -base64 32` |
 | `ADMIN_KEY` | ✅ | 管理员操作密钥：`openssl rand -hex 32` |
-| `AI_PROVIDER` | ✅ | `cf-workers-ai` \| `replicate` \| `cloudinary` |
-| `AI_GATEWAY_ENDPOINT` | 仅 CF AI | CF AI Gateway URL |
-| `REPLICATE_API_KEY` | 仅 Replicate | Replicate API Key |
-| `CLOUDINARY_*` | 仅 Cloudinary | Cloudinary 三件套 |
+| `AI_PROVIDER` | ✅ | `fal` \| `cf-workers-ai` \| `replicate` \| `cloudinary` |
+| `FAL_KEY` | fal provider | fal.ai API Key ([fal.ai API keys](https://fal.ai/dashboard/api-keys)) |
+| `AI_GATEWAY_ENDPOINT` | CF AI | CF AI Gateway URL |
+| `REPLICATE_API_KEY` | Replicate | Replicate API Key |
+| `CLOUDINARY_*` | Cloudinary | Cloudinary 三件套 |
+
+## fal.ai 实现细节
+
+**Model:** `openai/gpt-image-2/edit` (GPT Image 2 — image-to-image editing)
+
+**Queue 协议:**
+1. `POST https://queue.fal.run/openai/gpt-image-2/edit` → `{ request_id }`
+2. Poll `GET https://queue.fal.run/openai/gpt-image-2/edit/requests/{request_id}` until `status === "COMPLETED"`
+3. `GET .../data` → `{ images: [{ url, width, height, ... }] }`
+
+**Edit mode → prompt 映射:**
+
+| Mode | Prompt strategy |
+|------|----------------|
+| `enhance` | "Enhance this image: improve lighting, sharpness, color balance, and overall quality while preserving the original content and composition." |
+| `remove-bg` | "Remove the background from this image, leaving only the main subject with a transparent background." |
+| `restyle` | "Transform the style of this image while keeping the subject and composition intact — apply a fresh, modern aesthetic." |
+
+**API 限制:** fal 队列最长轮询 ~2 分钟（60 × 2s），超时则标记 `failed`。
 
 ## 资源状态
 

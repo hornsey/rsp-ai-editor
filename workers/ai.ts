@@ -1,5 +1,5 @@
 // AI inference — abstracted behind AI_PROVIDER
-// Supports: cf-workers-ai (default), replicate, cloudinary
+// Supports: fal (primary), cf-workers-ai, replicate, cloudinary
 
 import type { Env } from "./env";
 import type { EditMode } from "./schema";
@@ -10,19 +10,172 @@ export interface AIResult {
   height?: number;
 }
 
+const MODEL_SLUG = "openai/gpt-image-2/edit";
+
+const FAL_QUEUE_URL = "https://queue.fal.run";
+const POLL_INTERVAL_MS = 2000;
+const POLL_MAX_ATTEMPTS = 60; // ~2 minutes
+
 export async function runAIEdit(
   inputR2Url: string,
   mode: EditMode,
   env: Env
 ): Promise<AIResult> {
-  const provider = env.AI_PROVIDER || "cf-workers-ai";
+  const provider = env.AI_PROVIDER || "fal";
 
   switch (provider) {
-    case "cf-workers-ai":   return runCFWorkersAI(inputR2Url, mode, env);
-    case "replicate":        return runReplicate(inputR2Url, mode, env);
-    case "cloudinary":       return runCloudinary(inputR2Url, mode, env);
-    default:                 throw new Error(`Unknown AI_PROVIDER: ${provider}`);
+    case "fal":        return runFalEdit(inputR2Url, mode, env);
+    case "cf-workers-ai": return runCFWorkersAI(inputR2Url, mode, env);
+    case "replicate":   return runReplicate(inputR2Url, mode, env);
+    case "cloudinary":  return runCloudinary(inputR2Url, mode, env);
+    default:            throw new Error(`Unknown AI_PROVIDER: ${provider}`);
   }
+}
+
+// ── fal.ai ─────────────────────────────────────────────────────────────────
+// Primary provider: fal.ai GPT Image 2 edit endpoint
+// Docs: https://fal.ai/models/openai/gpt-image-2/edit/api
+//
+// Input schema for this model (image-to-image):
+//   prompt          string   — instruction describing the edit
+//   image_urls      string[] — publicly reachable URLs of source images
+//   image_size      string   — "auto" | "square_hd" | "square" | "portrait_4_3"
+//                              | "portrait_16_9" | "landscape_4_3" | "landscape_16_9"
+//   quality         string   — "auto" | "low" | "medium" | "high" (default "high")
+//   num_images      number   — number of output images (default 1, max 4)
+//   output_format   string   — "png" | "jpeg" | "webp" (default "png")
+//
+// Output schema:
+//   images: [{ url, width, height, file_name, content_type }]
+//
+// Queue protocol:
+//   POST https://queue.fal.run/{model_slug}
+//     body: { input: { ... }, webhookUrl: null }
+//   → { request_id: string }
+//
+//   GET https://queue.fal.run/{model_slug}/requests/{request_id}
+//   → { status: "IN_QUEUE" | "IN_PROGRESS" | "COMPLETED" | "FAILED", ... }
+//
+//   GET https://queue.fal.run/{model_slug}/requests/{request_id}/data
+//   → final output object
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface FalQueueResponse {
+  request_id: string;
+}
+
+interface FalQueueStatus {
+  status: "IN_QUEUE" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
+  logs?: Array<{ message: string }>;
+}
+
+interface FalOutput {
+  images: Array<{
+    url: string;
+    width: number;
+    height: number;
+    file_name: string;
+    content_type: string;
+  }>;
+}
+
+function buildEditPrompt(mode: EditMode): string {
+  switch (mode) {
+    case "enhance":
+      return "Enhance this image: improve lighting, sharpness, color balance, and overall quality while preserving the original content and composition.";
+    case "remove-bg":
+      return "Remove the background from this image, leaving only the main subject with a transparent background.";
+    case "restyle":
+      return "Transform the style of this image while keeping the subject and composition intact — apply a fresh, modern aesthetic.";
+    default:
+      return "Edit this image as requested.";
+  }
+}
+
+async function runFalEdit(
+  inputR2Url: string,
+  mode: EditMode,
+  env: Env
+): Promise<AIResult> {
+  const apiKey = env.FAL_KEY;
+  if (!apiKey) throw new Error("FAL_KEY not set — set it as a Wrangler secret.");
+
+  const prompt = buildEditPrompt(mode);
+
+  // Step 1: Submit to fal queue
+  const submitResp = await fetch(`${FAL_QUEUE_URL}/${MODEL_SLUG}`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Key ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      input: {
+        prompt,
+        image_urls: [inputR2Url],
+        image_size: "auto",
+        quality: "high",
+        num_images: 1,
+        output_format: "png",
+      },
+      webhookUrl: null, // We poll; no webhook needed
+    }),
+  });
+
+  if (!submitResp.ok) {
+    const body = await submitResp.text();
+    throw new Error(`fal.submit failed ${submitResp.status}: ${body}`);
+  }
+
+  const { request_id } = await submitResp.json() as FalQueueResponse;
+
+  // Step 2: Poll until completed
+  for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
+
+    const statusResp = await fetch(
+      `${FAL_QUEUE_URL}/${MODEL_SLUG}/requests/${request_id}`,
+      {
+        headers: { "Authorization": `Key ${apiKey}` },
+      }
+    );
+
+    if (!statusResp.ok) {
+      throw new Error(`fal.status poll failed ${statusResp.status}`);
+    }
+
+    const status = await statusResp.json() as FalQueueStatus;
+
+    if (status.status === "COMPLETED") {
+      // Step 3: Fetch result data
+      const resultResp = await fetch(
+        `${FAL_QUEUE_URL}/${MODEL_SLUG}/requests/${request_id}/data`,
+        { headers: { "Authorization": `Key ${apiKey}` } }
+      );
+
+      if (!resultResp.ok) throw new Error(`fal.result failed ${resultResp.status}`);
+      const result = await resultResp.json() as FalOutput;
+
+      if (!result.images || result.images.length === 0) {
+        throw new Error("fal returned no images in output");
+      }
+
+      const first = result.images[0];
+      return {
+        output_url: first.url,
+        width: first.width,
+        height: first.height,
+      };
+    }
+
+    if (status.status === "FAILED") {
+      throw new Error("fal inference failed on the provider side");
+    }
+
+    // IN_QUEUE or IN_PROGRESS — keep polling
+  }
+
+  throw new Error(`fal inference timeout after ${POLL_MAX_ATTEMPTS * POLL_INTERVAL_MS / 1000}s`);
 }
 
 // ── Cloudflare Workers AI ─────────────────────────────────────────────────
