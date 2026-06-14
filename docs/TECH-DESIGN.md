@@ -369,23 +369,43 @@ idx_sessions_google ON sessions(google_id)
 
 File: `workers/ai.ts`
 
-Supports three providers (configured via `AI_PROVIDER` env var):
+Primary provider: **fal.ai** (`openai/gpt-image-2/edit`)
 
 | Provider | Env Key | Status |
 |----------|---------|--------|
-| Cloudflare Workers AI | `AI_PROVIDER=cf-workers-ai` | Placeholder (model not specified) |
-| Replicate | `REPLICATE_API_KEY` | Placeholder (model not specified) |
-| Cloudinary | `CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET` | Placeholder (model not specified) |
+| **fal.ai** | `AI_PROVIDER=fal` + `FAL_KEY` | **✅ Implemented** |
+| Cloudflare Workers AI | `AI_PROVIDER=cf-workers-ai` | Placeholder (model TBD) |
+| Replicate | `REPLICATE_API_KEY` | Placeholder (model/version TBD) |
+| Cloudinary | `CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET` | Placeholder (transform TBD) |
 
-**Edit Modes → Model Mapping (TODO):**
+**Default:** `AI_PROVIDER=fal` (set in `wrangler.toml`)
 
-| Mode | Replicate Model | CF Workers AI Model | Cloudinary |
-|------|----------------|--------------------|-----------| 
-| `enhance` | `stability-ai/...` | TBD | TBD |
-| `remove-bg` | `yes-ai/...` | TBD | TBD |
-| `restyle` | `stability-ai/...` | TBD | TBD |
+**fal.ai queue protocol:**
+1. `POST https://queue.fal.run/openai/gpt-image-2/edit` → `{ request_id }`
+2. Poll `GET .../requests/{request_id}` every 2s until `status === "COMPLETED"` (max ~2 min)
+3. `GET .../data` → `{ images: [{ url, width, height, ... }] }`
 
-**Current Implementation:** Returns placeholder URLs; real model integration is pending.
+**Edit mode → prompt mapping:**
+
+| Mode | Prompt |
+|------|--------|
+| `enhance` | "Enhance this image: improve lighting, sharpness, color balance, and overall quality while preserving the original content and composition." |
+| `remove-bg` | "Remove the background from this image, leaving only the main subject with a transparent background." |
+| `restyle` | "Transform the style of this image while keeping the subject and composition intact — apply a fresh, modern aesthetic." |
+
+**fal.ai input parameters:**
+- `prompt` — edit instruction
+- `image_urls` — array of publicly reachable image URLs (R2 signed URLs)
+- `image_size: "auto"` — infer from input
+- `quality: "high"` — best quality
+- `num_images: 1` — single output
+- `output_format: "png"` — lossless output
+
+**Output:** `{ images: [{ url, width, height, file_name, content_type }] }`
+
+**API Key:** Set via `npx wrangler secret put FAL_KEY` — never committed to code.
+
+**Fallback placeholders:** cf-workers-ai / replicate / cloudinary remain as switch branches for future migration.
 
 ### 5.2 Async Edit Pipeline
 
@@ -589,8 +609,9 @@ npx wrangler d1 execute rsp-db --file=./migrations/0001_initial.sql --remote
 
 | Priority | Item | Description |
 |----------|------|-------------|
-| P0 | Real AI model integration | `workers/ai.ts` — replace placeholders with real Replicate/CF Workers AI models |
+| ~~P0~~ | ~~Real AI model integration~~ | ✅ **DONE — fal.ai GPT Image 2 implemented** (`AI_PROVIDER=fal`, `FAL_KEY`) |
 | P0 | R2 public URL | Output URLs are `https://placeholder.r2.dev/...` — need signed or proxied public URLs |
+| P0 | fal.ai FAL_KEY secret | Must be set via `npx wrangler secret put FAL_KEY` before production traffic |
 | P0 | Google OAuth redirect URI | Verify `https://api.image-editor.co/api/auth/callback/google` in Google Cloud Console |
 | P0 | Payment integration | Stripe/LemonSqueezy integration for Pro/Team plans |
 | P1 | GA4 / Analytics | Pageview and event tracking not yet configured |
