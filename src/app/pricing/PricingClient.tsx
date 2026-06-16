@@ -109,17 +109,17 @@ const faqs = [
 
 function formatPrice(plan: (typeof plans)[number], billingCycle: BillingCycle): string {
   if (plan.monthlyPrice === 0) return "$0";
-  return billingCycle === "annual" ? `$${plan.annualPrice}` : `$${plan.monthlyPrice}`;
+  return billingCycle === "annual" ? `$${Math.round(plan.annualPrice / 12)}` : `$${plan.monthlyPrice}`;
 }
 
-function formatCadence(plan: (typeof plans)[number], billingCycle: BillingCycle): string {
+function formatCadence(plan: (typeof plans)[number]): string {
   if (plan.monthlyPrice === 0) return plan.cadence;
-  return billingCycle === "annual" ? "per year" : "per month";
+  return "per month";
 }
 
-function effectiveMonthly(plan: (typeof plans)[number]): string | null {
+function annualBillingLabel(plan: (typeof plans)[number]): string | null {
   if (plan.monthlyPrice === 0) return null;
-  return `$${Math.round(plan.annualPrice / 12)}/mo effective`;
+  return `Billed Annually · $${plan.annualPrice}/year`;
 }
 
 export default function PricingClient() {
@@ -153,21 +153,6 @@ export default function PricingClient() {
       </section>
 
       <section className="app-shell pb-16">
-        <div className="mb-6 grid gap-4 rounded-[20px] border border-outline bg-surface-muted p-5 md:grid-cols-3">
-          <div>
-            <p className="text-sm font-extrabold">Credits-first billing</p>
-            <p className="mt-1 text-sm leading-6 text-on-surface-variant">Paid plans now use monthly credits instead of separate edit buckets.</p>
-          </div>
-          <div>
-            <p className="text-sm font-extrabold">Pro vs Max</p>
-            <p className="mt-1 text-sm leading-6 text-on-surface-variant">Pro is the best default; Max is for 3× more monthly editing volume.</p>
-          </div>
-          <div>
-            <p className="text-sm font-extrabold">Overflow ready</p>
-            <p className="mt-1 text-sm leading-6 text-on-surface-variant">Credit packs top up usage without claiming unlimited access.</p>
-          </div>
-        </div>
-
         <div className="grid gap-6 lg:grid-cols-3">
           {plans.map((plan) => {
             const isPro = plan.tone === "pro";
@@ -195,11 +180,11 @@ export default function PricingClient() {
                 <div className="mt-6 flex items-end gap-2">
                   <span className="text-5xl font-extrabold">{formatPrice(plan, billingCycle)}</span>
                   <span className={`pb-2 text-sm font-semibold ${isMax ? "text-white/65" : "text-on-surface-variant"}`}>
-                    {formatCadence(plan, billingCycle)}
+                    {formatCadence(plan)}
                   </span>
                 </div>
-                {billingCycle === "annual" && effectiveMonthly(plan) ? (
-                  <p className={`mt-2 text-sm font-bold ${isMax ? "text-white" : "text-primary"}`}>{effectiveMonthly(plan)} when billed yearly</p>
+                {billingCycle === "annual" && annualBillingLabel(plan) ? (
+                  <p className={`mt-2 text-sm font-bold ${isMax ? "text-white" : "text-primary"}`}>{annualBillingLabel(plan)}</p>
                 ) : (
                   <p className={`mt-2 text-sm ${isMax ? "text-white/65" : "text-on-surface-variant"}`}>{plan.cadence}</p>
                 )}
