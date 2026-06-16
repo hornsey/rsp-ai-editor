@@ -40,8 +40,8 @@
 
 ## Upgrade Nudges
 - Free limit hit: You’ve reached today’s free limit.
-- Benefit line: Upgrade for more edits, HD exports, and no watermark.
-- CTA: Upgrade to Pro
+- Benefit line: Choose Pro, Max, or a credit pack for more volume, HD exports, and no watermark.
+- CTA: View Pricing
 
 ## Confirmation / Safety
 - Delete history: Remove this item from your history?

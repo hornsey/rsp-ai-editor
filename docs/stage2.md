@@ -2,29 +2,29 @@
 PRD v1 — RSP AI Editor（工作名）
 
 1) 项目概述
-- 项目名：RSP AI Editor  
-- 阶段：02-product  
-- 目标市场：US / English  
-- 核心关键词：ai editor rsp editing  
+- 项目名：RSP AI Editor
+- 阶段：02-product
+- 目标市场：US / English
+- 核心关键词：ai editor rsp editing
 - 上游证据：该词在最近90天起量，趋势强（2.16x, strong），意图偏“找可用编辑工具/资源”。
 
 2) 一句话定位（Positioning）
 为需要快速完成图片与文案微编辑的用户，提供一个免登录、即开即用的轻量 AI 编辑器，主打“上传→一键编辑→导出”。
 
 3) ICP（至少3类）
-1. 内容创作者（主ICP）  
-   - 需求：快速改图、改文案、批量产出社媒素材  
-   - 痛点：工具复杂、学习成本高、导出受限  
-2. 中小商家运营  
-   - 需求：低成本制作商品图/活动文案  
-   - 痛点：没有设计团队，交付时效紧  
-3. 学生/个人用户  
-   - 需求：简历图、作业配图、简单润色  
+1. 内容创作者（主ICP）
+   - 需求：快速改图、改文案、批量产出社媒素材
+   - 痛点：工具复杂、学习成本高、导出受限
+2. 中小商家运营
+   - 需求：低成本制作商品图/活动文案
+   - 痛点：没有设计团队，交付时效紧
+3. 学生/个人用户
+   - 需求：简历图、作业配图、简单润色
    - 痛点：预算低，不愿注册付费再试
 
 4) 用户任务（Jobs To Be Done）
-- 我想在 3 分钟内完成一张图的基础编辑并下载。  
-- 我想输入一句话，让系统给我 3 个编辑版本可选。  
+- 我想在 3 分钟内完成一张图的基础编辑并下载。
+- 我想输入一句话，让系统给我 3 个编辑版本可选。
 - 我想不用注册，先试效果再决定是否升级。
 
 5) 产品边界（Scope）
@@ -47,7 +47,7 @@ NOT-DO（首版不做）
 - 快反馈（单次编辑目标 < 8s，失败可回退）
 
 7) 站点类型判断
-- 工具站（Tool-first）+ SEO 落地页 混合型  
+- 工具站（Tool-first）+ SEO 落地页 混合型
 - 首页承接搜索意图，工具页承接真实任务，内容页做长尾词与教育。
 
 ---
@@ -80,7 +80,7 @@ NOT-DO（首版不做）
 - 主词：ai editor pricing
 - H1：Simple Pricing for Creators
 - 目标：商业化承接
-- CTA：Upgrade to Pro
+- CTA：Choose Your Plan
 
 5. /blog/ai-editor-rsp-editing-guide（index）
 - 主词：ai editor rsp editing
@@ -96,7 +96,7 @@ NOT-DO（首版不做）
 功能需求（Functional Requirements）
 
 F1 上传与编辑
-- 支持拖拽上传，最大 10MB  
+- 支持拖拽上传，最大 10MB
 - 编辑模式：
   - Auto Enhance
   - Background Remove
@@ -125,9 +125,12 @@ F4 基础分析埋点
 ---
 
 商业化与定价（草案）
-- Free：每日有限次数 + 标准导出  
-- Pro（月订阅）：更多次数 + 高清无水印 + 批量  
-- [待确认] 是否加入 Lifetime（需结合获客成本）
+- Free：5 image edits/day + 10 copy rewrites/day + 标准导出
+- Pro（月订阅）：$12/月，1,200 积分/月，高清无水印，适合规律使用者
+- Max（月订阅）：$28/月，3,500 积分/月，适合高频与重度工作流
+- 年付：统一 75 折（Pro $108/年，Max $252/年）
+- 积分包：500/$6.9（首购一次）、1500/$26.9、3000/$48.9、6000/$86.9
+- Launch 口径不包含 Team / Lifetime，避免超前售卖未落地能力
 
 ---
 
@@ -157,8 +160,8 @@ Competitive Minimum（可对标最低能力）
 ---
 
 风险清单
-- P0：关键词可能品牌/噪音属性偏高，需人工SERP复扫验证可持续流量  
-- P1：AI结果质量不稳导致留存差  
+- P0：关键词可能品牌/噪音属性偏高，需人工SERP复扫验证可持续流量
+- P1：AI结果质量不稳导致留存差
 - P2：同类工具竞争激烈，需差异化入口与速度优势
 
 ---
@@ -178,10 +181,10 @@ Competitive Minimum（可对标最低能力）
 ---
 
 质量门槛自检
-- ✅ PRD 可开发，不是关键词说明  
-- ✅ index 页面均有真实用户任务  
-- ✅ NOT-DO 明确  
-- ✅ 下游边界清晰  
+- ✅ PRD 可开发，不是关键词说明
+- ✅ index 页面均有真实用户任务
+- ✅ NOT-DO 明确
+- ✅ 下游边界清晰
 - ⚠️ 待补：SERP Top3 竞品逐页拆解（功能/定价/流量入口）
 
 ---
@@ -221,8 +224,8 @@ Competitive Minimum（可对标最低能力）
 
 1) Pricing v1（RSP AI Editor）
 
- 目标：先保证可用与不亏穿，再逐步提ARPU。  
- 市场：US / English。  
+ 目标：先保证可用与不亏穿，再逐步提ARPU。
+ 市场：US / English。
  说明：具体成本数据缺失，以下含 [待确认] 参数位。
 
 套餐矩阵（v1）
@@ -231,29 +234,32 @@ Competitive Minimum（可对标最低能力）
   - 价格：$0
   - 额度：每日 5 次图片编辑 + 10 次文案改写
   - 导出：标准分辨率（如 1024px）+ 水印 [待确认]
-  - 历史记录：最近 24h（会话级）
+  - 历史记录：本地会话级历史
   - 适用人群：首次试用、轻度用户
   - CTA：Start Free
 
-- Pro Monthly
-  - 价格：$12/mo（年付可 $9/mo）
-  - 额度：每月 500 次图片编辑 + 1000 次文案改写
+- Pro
+  - 价格：$12/mo 或 $108/year
+  - 额度：1,200 credits/month
   - 导出：高清 + 无水印
-  - 功能：优先队列、批量导出（上限 20/批）、历史记录 90 天
-  - 适用人群：创作者、独立运营
-  - CTA：Upgrade to Pro
+  - 功能：优先队列、批量导出（上限 20/批）
+  - 适用人群：规律使用的创作者、独立运营
+  - CTA：Choose Pro
 
-- Team
-  - 价格：$39/mo（3 席位起）
-  - 额度：共享池 2500 次/月
-  - 功能：简单协作（共享历史/模板）、账单管理、邮箱支持
-  - 适用人群：小团队电商/内容工作室
-  - CTA：Contact Sales（不承诺即时开通）
+- Max
+  - 价格：$28/mo 或 $252/year
+  - 额度：3,500 credits/month
+  - 导出：高清 + 无水印
+  - 功能：优先队列、批量导出（上限 20/批）
+  - 适用人群：高频用户、重度工作流
+  - CTA：Choose Max
 
-- Lifetime（可选，灰度）
-  - 建议：先不上线公开售卖
-  - 若上：$129 一次性，限制为 1500 次总编辑点数 + 基础支持
-  - 理由：避免长期成本失控与滥用风险
+- Credit Packs
+  - Starter Pack：500 credits / $6.9（仅首购 1 次）
+  - Standard Pack：1,500 credits / $26.9
+  - Growth Pack：3,000 credits / $48.9
+  - Scale Pack：6,000 credits / $86.9
+  - 说明：用于超额补量，不替代订阅
 
 商业模型校准（简版）
 
@@ -310,7 +316,7 @@ F. 安全与运营最低要求
 
 3) Homepage Copy Deck（首页文案包，英文）
 
- 风格：短句、任务导向、避免空泛AI术语。  
+ 风格：短句、任务导向、避免空泛AI术语。
  适配结构：Hero → Proof → Problem → Solution → How it works → Pricing teaser → FAQ → Final CTA
 
 Hero
@@ -320,8 +326,8 @@ Hero
 - Secondary CTA: See How It Works
 
 Proof Strip
-- Fast turnaround for everyday edits  
-- Beginner-friendly, task-based interface  
+- Fast turnaround for everyday edits
+- Beginner-friendly, task-based interface
 - Built for creators, sellers, and solo teams
 
 Problem Section
@@ -334,26 +340,26 @@ Problem Section
 Solution Section
 - Title: One workflow for 80% of daily editing tasks
 - Feature cards:
-  1. Auto Enhance — Improve clarity and lighting instantly  
-  2. Background Remove — Clean cutout for product and profile images  
-  3. Smart Rewrite — Generate 3 caption options in different tones  
+  1. Auto Enhance — Improve clarity and lighting instantly
+  2. Background Remove — Clean cutout for product and profile images
+  3. Smart Rewrite — Generate 3 caption options in different tones
 
 How It Works
-1. Upload your image  
-2. Pick an edit mode  
+1. Upload your image
+2. Pick an edit mode
 3. Export your result (and refine if needed)
 
 Pricing Teaser
-- Free for quick trials  
-- Pro for higher volume, HD exports, and no watermark  
+- Free for quick trials
+- Pro for higher volume, HD exports, and no watermark
 - CTA: View Pricing
 
 FAQ (Homepage short)
-- Do I need an account to start?  
+- Do I need an account to start?
   No. You can try core editing before signup.
-- Can I use it for commercial projects?  
+- Can I use it for commercial projects?
   Yes, subject to our Terms and content policy.
-- Is output always perfect?  
+- Is output always perfect?
   AI output quality may vary. You can regenerate and refine.
 
 Final CTA Block
@@ -373,29 +379,29 @@ SEO Copy Freeze（首页）
 PRD v1 — RSP AI Editor（工作名）
 
 1) 项目概述
-- 项目名：RSP AI Editor  
-- 阶段：02-product  
-- 目标市场：US / English  
-- 核心关键词：ai editor rsp editing  
+- 项目名：RSP AI Editor
+- 阶段：02-product
+- 目标市场：US / English
+- 核心关键词：ai editor rsp editing
 - 上游证据：该词在最近90天起量，趋势强（2.16x, strong），意图偏“找可用编辑工具/资源”。
 
 2) 一句话定位（Positioning）
 为需要快速完成图片与文案微编辑的用户，提供一个免登录、即开即用的轻量 AI 编辑器，主打“上传→一键编辑→导出”。
 
 3) ICP（至少3类）
-1. 内容创作者（主ICP）  
-   - 需求：快速改图、改文案、批量产出社媒素材  
-   - 痛点：工具复杂、学习成本高、导出受限  
-2. 中小商家运营  
-   - 需求：低成本制作商品图/活动文案  
-   - 痛点：没有设计团队，交付时效紧  
-3. 学生/个人用户  
-   - 需求：简历图、作业配图、简单润色  
+1. 内容创作者（主ICP）
+   - 需求：快速改图、改文案、批量产出社媒素材
+   - 痛点：工具复杂、学习成本高、导出受限
+2. 中小商家运营
+   - 需求：低成本制作商品图/活动文案
+   - 痛点：没有设计团队，交付时效紧
+3. 学生/个人用户
+   - 需求：简历图、作业配图、简单润色
    - 痛点：预算低，不愿注册付费再试
 
 4) 用户任务（Jobs To Be Done）
-- 我想在 3 分钟内完成一张图的基础编辑并下载。  
-- 我想输入一句话，让系统给我 3 个编辑版本可选。  
+- 我想在 3 分钟内完成一张图的基础编辑并下载。
+- 我想输入一句话，让系统给我 3 个编辑版本可选。
 - 我想不用注册，先试效果再决定是否升级。
 
 5) 产品边界（Scope）
@@ -418,7 +424,7 @@ NOT-DO（首版不做）
 - 快反馈（单次编辑目标 < 8s，失败可回退）
 
 7) 站点类型判断
-- 工具站（Tool-first）+ SEO 落地页 混合型  
+- 工具站（Tool-first）+ SEO 落地页 混合型
 - 首页承接搜索意图，工具页承接真实任务，内容页做长尾词与教育。
 
 ---
@@ -451,7 +457,7 @@ NOT-DO（首版不做）
 - 主词：ai editor pricing
 - H1：Simple Pricing for Creators
 - 目标：商业化承接
-- CTA：Upgrade to Pro
+- CTA：Choose Your Plan
 
 5. /blog/ai-editor-rsp-editing-guide（index）
 - 主词：ai editor rsp editing
@@ -467,7 +473,7 @@ NOT-DO（首版不做）
 功能需求（Functional Requirements）
 
 F1 上传与编辑
-- 支持拖拽上传，最大 10MB  
+- 支持拖拽上传，最大 10MB
 - 编辑模式：
   - Auto Enhance
   - Background Remove
@@ -496,9 +502,12 @@ F4 基础分析埋点
 ---
 
 商业化与定价（草案）
-- Free：每日有限次数 + 标准导出  
-- Pro（月订阅）：更多次数 + 高清无水印 + 批量  
-- [待确认] 是否加入 Lifetime（需结合获客成本）
+- Free：5 image edits/day + 10 copy rewrites/day + 标准导出
+- Pro（月订阅）：$12/月，1,200 积分/月，高清无水印，适合规律使用者
+- Max（月订阅）：$28/月，3,500 积分/月，适合高频与重度工作流
+- 年付：统一 75 折（Pro $108/年，Max $252/年）
+- 积分包：500/$6.9（首购一次）、1500/$26.9、3000/$48.9、6000/$86.9
+- Launch 口径不包含 Team / Lifetime，避免超前售卖未落地能力
 
 ---
 
@@ -528,8 +537,8 @@ Competitive Minimum（可对标最低能力）
 ---
 
 风险清单
-- P0：关键词可能品牌/噪音属性偏高，需人工SERP复扫验证可持续流量  
-- P1：AI结果质量不稳导致留存差  
+- P0：关键词可能品牌/噪音属性偏高，需人工SERP复扫验证可持续流量
+- P1：AI结果质量不稳导致留存差
 - P2：同类工具竞争激烈，需差异化入口与速度优势
 
 ---
@@ -549,10 +558,10 @@ Competitive Minimum（可对标最低能力）
 ---
 
 质量门槛自检
-- ✅ PRD 可开发，不是关键词说明  
-- ✅ index 页面均有真实用户任务  
-- ✅ NOT-DO 明确  
-- ✅ 下游边界清晰  
+- ✅ PRD 可开发，不是关键词说明
+- ✅ index 页面均有真实用户任务
+- ✅ NOT-DO 明确
+- ✅ 下游边界清晰
 - ⚠️ 待补：SERP Top3 竞品逐页拆解（功能/定价/流量入口）
 
 ---
@@ -592,8 +601,8 @@ Competitive Minimum（可对标最低能力）
 
 1) Pricing v1（RSP AI Editor）
 
- 目标：先保证可用与不亏穿，再逐步提ARPU。  
- 市场：US / English。  
+ 目标：先保证可用与不亏穿，再逐步提ARPU。
+ 市场：US / English。
  说明：具体成本数据缺失，以下含 [待确认] 参数位。
 
 套餐矩阵（v1）
@@ -602,29 +611,32 @@ Competitive Minimum（可对标最低能力）
   - 价格：$0
   - 额度：每日 5 次图片编辑 + 10 次文案改写
   - 导出：标准分辨率（如 1024px）+ 水印 [待确认]
-  - 历史记录：最近 24h（会话级）
+  - 历史记录：本地会话级历史
   - 适用人群：首次试用、轻度用户
   - CTA：Start Free
 
-- Pro Monthly
-  - 价格：$12/mo（年付可 $9/mo）
-  - 额度：每月 500 次图片编辑 + 1000 次文案改写
+- Pro
+  - 价格：$12/mo 或 $108/year
+  - 额度：1,200 credits/month
   - 导出：高清 + 无水印
-  - 功能：优先队列、批量导出（上限 20/批）、历史记录 90 天
-  - 适用人群：创作者、独立运营
-  - CTA：Upgrade to Pro
+  - 功能：优先队列、批量导出（上限 20/批）
+  - 适用人群：规律使用的创作者、独立运营
+  - CTA：Choose Pro
 
-- Team
-  - 价格：$39/mo（3 席位起）
-  - 额度：共享池 2500 次/月
-  - 功能：简单协作（共享历史/模板）、账单管理、邮箱支持
-  - 适用人群：小团队电商/内容工作室
-  - CTA：Contact Sales（不承诺即时开通）
+- Max
+  - 价格：$28/mo 或 $252/year
+  - 额度：3,500 credits/month
+  - 导出：高清 + 无水印
+  - 功能：优先队列、批量导出（上限 20/批）
+  - 适用人群：高频用户、重度工作流
+  - CTA：Choose Max
 
-- Lifetime（可选，灰度）
-  - 建议：先不上线公开售卖
-  - 若上：$129 一次性，限制为 1500 次总编辑点数 + 基础支持
-  - 理由：避免长期成本失控与滥用风险
+- Credit Packs
+  - Starter Pack：500 credits / $6.9（仅首购 1 次）
+  - Standard Pack：1,500 credits / $26.9
+  - Growth Pack：3,000 credits / $48.9
+  - Scale Pack：6,000 credits / $86.9
+  - 说明：用于超额补量，不替代订阅
 
 商业模型校准（简版）
 
@@ -681,7 +693,7 @@ F. 安全与运营最低要求
 
 3) Homepage Copy Deck（首页文案包，英文）
 
- 风格：短句、任务导向、避免空泛AI术语。  
+ 风格：短句、任务导向、避免空泛AI术语。
  适配结构：Hero → Proof → Problem → Solution → How it works → Pricing teaser → FAQ → Final CTA
 
 Hero
@@ -691,8 +703,8 @@ Hero
 - Secondary CTA: See How It Works
 
 Proof Strip
-- Fast turnaround for everyday edits  
-- Beginner-friendly, task-based interface  
+- Fast turnaround for everyday edits
+- Beginner-friendly, task-based interface
 - Built for creators, sellers, and solo teams
 
 Problem Section
@@ -705,26 +717,26 @@ Problem Section
 Solution Section
 - Title: One workflow for 80% of daily editing tasks
 - Feature cards:
-  1. Auto Enhance — Improve clarity and lighting instantly  
-  2. Background Remove — Clean cutout for product and profile images  
-  3. Smart Rewrite — Generate 3 caption options in different tones  
+  1. Auto Enhance — Improve clarity and lighting instantly
+  2. Background Remove — Clean cutout for product and profile images
+  3. Smart Rewrite — Generate 3 caption options in different tones
 
 How It Works
-1. Upload your image  
-2. Pick an edit mode  
+1. Upload your image
+2. Pick an edit mode
 3. Export your result (and refine if needed)
 
 Pricing Teaser
-- Free for quick trials  
-- Pro for higher volume, HD exports, and no watermark  
+- Free for quick trials
+- Pro for higher volume, HD exports, and no watermark
 - CTA: View Pricing
 
 FAQ (Homepage short)
-- Do I need an account to start?  
+- Do I need an account to start?
   No. You can try core editing before signup.
-- Can I use it for commercial projects?  
+- Can I use it for commercial projects?
   Yes, subject to our Terms and content policy.
-- Is output always perfect?  
+- Is output always perfect?
   AI output quality may vary. You can regenerate and refine.
 
 Final CTA Block
@@ -750,9 +762,9 @@ SEO
 - H1: Simple Pricing for Fast Editing
 
 Hero
-Headline: Start Free. Upgrade When It Saves You Time.  
-Subhead: Built for creators, sellers, and small teams who need fast editing without complex tools.  
-Primary CTA: Start Editing Free  
+Headline: Start Free. Upgrade When It Saves You Time.
+Subhead: Built for creators, sellers, and small teams who need fast editing without complex tools.
+Primary CTA: Start Editing Free
 Secondary CTA: Compare Plans
 
 Billing Toggle
@@ -765,53 +777,60 @@ Free — $0
 - 5 image edits/day
 - 10 copy rewrites/day
 - Standard export quality
-- Session history (24h)
+- Local session history only
 - Watermark on exports [if enabled]
 - CTA: Start Free
 
-Pro — $12/month (or $9/month billed yearly)
-- Best for active creators
-- 500 image edits/month
-- 1,000 copy rewrites/month
+Pro — $12/month (or $108/year)
+- Best for regular creators
+- 1,200 monthly credits
+- Effective annual price: $9/month
 - HD exports
 - No watermark
 - Priority processing
 - Batch export (up to 20 per batch)
-- History retention (90 days)
-- CTA: Upgrade to Pro
+- CTA: Choose Pro
 
-Team — $39/month (3 seats included)
-- Best for small teams
-- Shared pool: 2,500 edits/month
-- Shared templates & history
-- Team billing
-- Priority email support
-- CTA: Contact Sales
+Max — $28/month (or $252/year)
+- Best for power users
+- 3,500 monthly credits
+- Effective annual price: $21/month
+- HD exports
+- No watermark
+- Priority processing
+- Batch export (up to 20 per batch)
+- CTA: Choose Max
+
+Credit Packs
+- Starter Pack — 500 credits — $6.9 — first purchase only
+- Standard Pack — 1,500 credits — $26.9
+- Growth Pack — 3,000 credits — $48.9
+- Scale Pack — 6,000 credits — $86.9
 
 Trust / Clarification Strip
-- No hidden fees  
-- Cancel anytime  
+- No hidden fees
+- Cancel anytime
 - Secure checkout
 
 FAQ
-Q: Do unused credits roll over?  
+Q: Do unused credits roll over?
 A: No, monthly credits reset each billing cycle.
 
-Q: What counts as one edit?  
+Q: What counts as one edit?
 A: One successful image generation/edit output counts as one edit. Regenerations count separately.
 
-Q: Can I cancel anytime?  
+Q: Can I cancel anytime?
 A: Yes. Your plan remains active until the end of the billing period.
 
-Q: Do you offer refunds?  
+Q: Do you offer refunds?
 A: Please see our Refund Policy for eligibility and time windows.
 
-Q: Is there an unlimited plan?  
+Q: Is there an unlimited plan?
 A: No. We use clear usage limits to keep performance and pricing fair.
 
 Final CTA
-Headline: Ready to edit faster?  
-Body: Start with Free. Upgrade when your workflow scales.  
+Headline: Ready to edit faster?
+Body: Start with Free. Upgrade when your workflow scales.
 CTA: Start Editing Free
 
 ---

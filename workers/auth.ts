@@ -3,6 +3,7 @@
 
 import type { Env } from "./env";
 import { signToken, verifyToken } from "./session";
+import { getMonthlyCredits, nextResetAt } from "./db";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -166,13 +167,14 @@ export async function handleGoogleCallback(req: Request, env: Env): Promise<Resp
       .bind(now, googleUser.name, googleUser.picture, sessionId)
       .run();
   } else {
+    const plan = "free";
     sessionId = crypto.randomUUID();
     await db
       .prepare(
-        `INSERT INTO sessions (id, google_id, plan, edits_used, edits_limit, resets_at, created_at, updated_at, name, picture)
-         VALUES (?, ?, 'free', 0, 5, ?, ?, ?, ?, ?)`
+        `INSERT INTO sessions (id, google_id, plan, monthly_credits, purchased_credits, credits_used, reset_at, created_at, updated_at, name, picture)
+         VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?)`
       )
-      .bind(sessionId, googleUser.id, now + 86400000, now, now, googleUser.name, googleUser.picture)
+      .bind(sessionId, googleUser.id, plan, getMonthlyCredits(plan), nextResetAt(plan, now), now, now, googleUser.name, googleUser.picture)
       .run();
   }
 
@@ -200,7 +202,7 @@ export async function handleAuthMe(req: Request, env: Env): Promise<Response> {
   }
 
   const row = await env.DB
-    .prepare("SELECT id, google_id, plan, edits_used, edits_limit, resets_at, name, picture FROM sessions WHERE id = ?")
+    .prepare("SELECT id, google_id, plan, monthly_credits, purchased_credits, credits_used, reset_at, name, picture FROM sessions WHERE id = ?")
     .bind(result.sessionId)
     .first();
 
@@ -216,9 +218,11 @@ export async function handleAuthMe(req: Request, env: Env): Promise<Response> {
       authenticated: Boolean(row.google_id),
       session_id: row.id,
       plan: row.plan,
-      edits_used: row.edits_used,
-      edits_limit: row.edits_limit,
-      resets_at: row.resets_at,
+      monthly_credits: row.monthly_credits,
+      purchased_credits: row.purchased_credits,
+      credits_used: row.credits_used,
+      credits_remaining: Math.max(0, Number(row.monthly_credits) - Number(row.credits_used)) + Math.max(0, Number(row.purchased_credits)),
+      reset_at: row.reset_at,
       user: row.google_id ? { name: row.name, picture: row.picture } : null,
     },
   }), { headers: { "Content-Type": "application/json" } });

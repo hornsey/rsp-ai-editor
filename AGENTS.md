@@ -79,8 +79,8 @@ Run the smallest relevant verification command after edits. For UI or routing ch
 - Keep `/editor` task-first: upload, choose mode, process, compare or inspect result, export.
 - Required routes should stay accessible: `/`, `/editor`, `/features`, `/pricing`, `/blog/ai-editor-rsp-editing-guide`, `/privacy`, `/terms`, `/refund`, `/cookie`, and the not-found UI.
 - Do not claim unlimited usage. Pricing docs explicitly prohibit "unlimited" claims.
-- Free plan copy should align with `docs/pricing/pricing-v1.md`: 5 image edits/day and 10 copy rewrites/day unless updated by product docs.
-- Pro plan copy should align with `docs/pricing/pricing-v1.md`: $12/mo or $9/mo annually, 500 image edits/month, 1,000 copy rewrites/month, HD exports, no watermark, priority processing.
+- Free plan copy should align with `docs/pricing/pricing-v1.md`: 5 image edits/day, 10 copy rewrites/day, and local session history only unless updated by product docs.
+- Paid plan copy should align with `docs/pricing/pricing-v1.md`: Pro = $12/mo or $108/year with 1,200 credits/month; Max = $28/mo or $252/year with 3,500 credits/month; both include HD exports, no watermark, and priority processing.
 - Legal pages may contain placeholders such as `[DATE]`, `[LEGAL_ENTITY_NAME]`, and `[SUPPORT_EMAIL]`; do not present them as launch-ready until replaced.
 - Target audience and UI copy are English-first.
 

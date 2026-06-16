@@ -38,7 +38,7 @@ function getErrorMessage(type: ErrorType): string | null {
   if (type === "format") return "Unsupported file type. Please use JPG, PNG, or WebP.";
   if (type === "size") return `File too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.`;
   if (type === "network") return "Network error. Check your connection and try again.";
-  if (type === "rate_limit") return "Daily limit reached. Upgrade to Pro for higher monthly limits.";
+  if (type === "rate_limit") return "Daily limit reached. View Pro, Max, or credit packs for more volume.";
   if (type === "server") return "Server error. Please try again in a few moments.";
   return null;
 }
@@ -52,8 +52,8 @@ export default function EditorPage() {
   const [selectedResult, setSelectedResult] = useState(0);
   const [errorType, setErrorType] = useState<ErrorType>(null);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [editsUsed, setEditsUsed] = useState<number | null>(null);
-  const [editsLimit, setEditsLimit] = useState<number | null>(null);
+  const [creditsUsed, setCreditsUsed] = useState<number | null>(null);
+  const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
   const [showCopyRewrite, setShowCopyRewrite] = useState(false);
 
   const handleFileSelect = useCallback((file: File) => {
@@ -105,8 +105,8 @@ export default function EditorPage() {
 
           try {
             const usage = await getUsage();
-            setEditsUsed(usage.edits_used);
-            setEditsLimit(usage.edits_limit);
+            setCreditsUsed(usage.credits_used);
+            setCreditsRemaining(usage.credits_remaining);
           } catch {
             // Usage is helpful but not required for a completed edit.
           }
@@ -183,13 +183,13 @@ export default function EditorPage() {
             <p className="text-sm font-bold">Free limits</p>
             <p className="text-sm text-on-surface-variant">5 image edits/day · 10 copy rewrites/day</p>
           </div>
-          {editsUsed !== null && editsLimit !== null ? (
+          {creditsUsed !== null && creditsRemaining !== null ? (
             <span className="rounded-full bg-primary-container px-3 py-1 text-sm font-bold text-on-primary-container">
-              {editsUsed}/{editsLimit} edits used
+              {creditsRemaining} credits left · {creditsUsed} used
             </span>
           ) : (
             <Link href="/pricing" className="text-sm font-bold text-primary hover:underline">
-              View Pro limits
+              View Pro credits
             </Link>
           )}
         </div>

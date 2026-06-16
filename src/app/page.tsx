@@ -172,9 +172,9 @@ export default function HomePage() {
       <section className="app-shell section-y grid gap-8 lg:grid-cols-2">
         <div className="panel-card p-6">
           <p className="eyebrow mb-3">Pricing preview</p>
-          <h2 className="text-3xl font-extrabold">Free for trials. Pro for higher volume.</h2>
+          <h2 className="text-3xl font-extrabold">Free for trials. Pro and Max when volume grows.</h2>
           <p className="mt-4 leading-7 text-on-surface-variant">
-            Free includes 5 image edits/day and 10 copy rewrites/day. Pro unlocks 500 image edits/month, HD exports, no watermark, priority processing, and batch export.
+            Free includes 5 image edits/day and 10 copy rewrites/day. Pro includes 1,200 monthly credits, Max includes 3,500 monthly credits, and both paid plans unlock HD exports, no watermark, priority processing, and batch export.
           </p>
           <Link href="/pricing" className="primary-button mt-6">
             View Pricing

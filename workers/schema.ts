@@ -1,10 +1,13 @@
 // RSP AI Editor — Shared types for Workers API
+export type Plan = "free" | "pro" | "max";
+
 export interface Session {
   id: string;
-  plan: "free" | "pro" | "team";
-  edits_used: number;
-  edits_limit: number;
-  resets_at: number; // Unix ms
+  plan: Plan;
+  monthly_credits: number;
+  purchased_credits: number;
+  credits_used: number;
+  reset_at: number; // Unix ms
   created_at: number;
   updated_at: number;
 }
@@ -25,7 +28,7 @@ export interface Subscription {
   id: string;
   session_id: string;
   provider: "stripe" | "lemonsqueezy";
-  plan: "pro" | "team";
+  plan: "pro" | "max";
   status: "active" | "cancelled" | "past_due";
   provider_id: string;
   current_period_end: number;
@@ -33,8 +36,8 @@ export interface Subscription {
 }
 
 export interface PricingTier {
-  plan: string;
-  edits_limit: number;
+  plan: Plan;
+  monthly_credits: number;
   resets_every: "day" | "month";
   hd_export: boolean;
   watermark: boolean;
@@ -49,9 +52,9 @@ export interface ApiResponse<T = unknown> {
 }
 
 export const RATE_LIMITS = {
-  free: { limit: 5, window: "day" },
-  pro: { limit: 500, window: "month" },
-  team: { limit: 2500, window: "month" },
+  free: { monthly_credits: 5, window: "day" },
+  pro: { monthly_credits: 1200, window: "month" },
+  max: { monthly_credits: 3500, window: "month" },
 } as const;
 
 export type EditMode = "enhance" | "remove-bg" | "restyle";

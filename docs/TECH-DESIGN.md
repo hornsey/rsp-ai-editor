@@ -77,7 +77,7 @@ src/
 │   ├── globals.css             # Design tokens (CSS variables), component styles
 │   ├── editor/page.tsx         # Editor: UploadZone, ModeTabs, ResultPanel, ExportBar
 │   ├── features/page.tsx       # Features page: Bento grid, CTAs
-│   ├── pricing/page.tsx        # Pricing: Free/Pro/Team cards, FAQ accordion
+│   ├── pricing/page.tsx        # Pricing: Free/Pro/Max cards, Credit Packs, FAQ accordion
 │   ├── privacy/page.tsx        # Privacy Policy
 │   ├── terms/page.tsx         # Terms of Service
 │   ├── refund/page.tsx         # Refund Policy
@@ -285,7 +285,7 @@ edits (
   created_at   INTEGER NOT NULL
 )
 
--- Subscriptions (Pro / Team)
+-- Subscriptions (Pro / Max)
 subscriptions (
   id                 TEXT PRIMARY KEY,
   session_id         TEXT NOT NULL UNIQUE REFERENCES sessions(id),
@@ -331,9 +331,9 @@ idx_sessions_google ON sessions(google_id)
 
 | plan | edits_limit | resets_every | hd_export | watermark | batch_size |
 |------|-------------|--------------|-----------|-----------|------------|
-| free | 5 | day | 0 | 1 | 1 |
-| pro | 500 | month | 1 | 0 | 20 |
-| team | 2500 | month | 1 | 0 | 20 |
+| free | 5/day + 10 copy rewrites/day | day | 0 | 1 | 1 |
+| pro | 1200 credits/month | month | 1 | 0 | 20 |
+| max | 3500 credits/month | month | 1 | 0 | 20 |
 
 ### 4.2 KV Namespaces
 
@@ -344,7 +344,7 @@ idx_sessions_google ON sessions(google_id)
 
 **Rate Limit Algorithm:**
 - Key: `rl:{sessionId}:{windowStart}`
-- Window: 1 day (free) or 1 month (pro/team)
+- Window: 1 day (free) or 1 month (pro/max)
 - Checked before edit submission; returns `429` if exceeded
 
 ### 4.3 R2 Buckets
@@ -538,18 +538,27 @@ Frontend handles:
 
 ### 8.1 Plan Limits
 
-| Plan | Edits | Resets | HD Export | Watermark | Batch |
-|------|-------|--------|----------|-----------|-------|
-| Free | 5/day | Daily | ✗ | ✓ | 1 |
-| Pro | 500/month | Monthly | ✓ | ✗ | 20 |
-| Team | 2500/month | Monthly | ✓ | ✗ | 20 |
+| Plan | Credits / Limits | Resets | HD Export | Watermark | Batch |
+|------|------------------|--------|----------|-----------|-------|
+| Free | 5 image edits/day + 10 copy rewrites/day | Daily | ✗ | ✓ | 1 |
+| Pro | 1,200 credits/month | Monthly | ✓ | ✗ | 20 |
+| Max | 3,500 credits/month | Monthly | ✓ | ✗ | 20 |
+
+### 8.1.1 Credit Packs
+
+| Pack | Credits | Price | Restriction |
+|------|---------|-------|-------------|
+| Starter Pack | 500 | $6.9 | First purchase only |
+| Standard Pack | 1,500 | $26.9 | None |
+| Growth Pack | 3,000 | $48.9 | None |
+| Scale Pack | 6,000 | $86.9 | None |
 
 ### 8.2 Credit System
 
-- 1 credit consumed per edit submission (regardless of outcome)
-- Entitlement checked via D1 `sessions` table (`edits_used < edits_limit`)
+- 1 credit consumed per paid edit submission (regardless of outcome)
+- Entitlement model should support `plan`, `monthly_credits`, `purchased_credits`, `credits_used`, and `reset_at`
 - Rate limit checked via KV before edit submission
-- Auto-reset: free sessions reset daily; paid sessions reset monthly
+- Auto-reset: free sessions reset daily; paid monthly credits reset each billing cycle; purchased credits do not auto-reset before use
 
 ---
 
@@ -613,12 +622,12 @@ npx wrangler d1 execute rsp-db --file=./migrations/0001_initial.sql --remote
 | P0 | R2 public URL | Output URLs are `https://placeholder.r2.dev/...` — need signed or proxied public URLs |
 | P0 | fal.ai FAL_KEY secret | Must be set via `npx wrangler secret put FAL_KEY` before production traffic |
 | P0 | Google OAuth redirect URI | Verify `https://api.image-editor.co/api/auth/callback/google` in Google Cloud Console |
-| P0 | Payment integration | Stripe/LemonSqueezy integration for Pro/Team plans |
+| P0 | Payment integration | Stripe/LemonSqueezy integration for Pro/Max subscriptions and credit packs |
 | P1 | GA4 / Analytics | Pageview and event tracking not yet configured |
 | P1 | Legal page placeholders | `[DATE]`, `[LEGAL_ENTITY_NAME]`, `[SUPPORT_EMAIL]` not yet replaced |
 | P1 | Copy rewrite LLM | Returns placeholder variants — integrate CF Workers AI chat |
 | P2 | Batch export | UI and API for batch processing (20 images) |
-| P2 | Team features | Shared pool, team billing, admin dashboard |
+| P2 | Team / Lifetime expansion | Defer until launch pricing, billing, and entitlement model are stable |
 | P2 | Branding assets | Logo SVG, favicon replacement from Material Icons |
 
 ---

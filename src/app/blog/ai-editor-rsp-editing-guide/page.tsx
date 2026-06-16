@@ -52,18 +52,19 @@ export default function BlogPostPage() {
         </section>
 
         <section className="mt-8">
-          <h2 className="text-2xl font-extrabold">When Pro makes sense</h2>
+          <h2 className="text-2xl font-extrabold">When a paid plan makes sense</h2>
           <ul className="mt-3 list-disc space-y-2 pl-6 leading-7 text-on-surface-variant">
-            <li>You need 500 image edits/month and 1,000 copy rewrites/month.</li>
+            <li>Choose Pro when 1,200 monthly credits cover your regular workflow.</li>
+            <li>Choose Max when you need 3,500 monthly credits for heavier usage.</li>
             <li>You need HD exports and no watermark for client or commercial work.</li>
-            <li>You need priority processing or batch export up to 20 images.</li>
+            <li>You need priority processing, batch export up to 20 images, or occasional overflow via credit packs.</li>
           </ul>
         </section>
 
         <section className="mt-12 rounded-[20px] bg-on-surface p-8 text-center text-white">
           <h2 className="text-2xl font-extrabold">Ready to try the workflow?</h2>
           <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-white/75">
-            Open the editor, upload a supported image, and complete your first task before deciding whether Pro is useful.
+            Open the editor, upload a supported image, and complete your first task before deciding whether Free, Pro, or Max fits your workflow.
           </p>
           <Link href="/editor" className="primary-button mt-6">
             Open the Editor

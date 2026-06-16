@@ -27,10 +27,10 @@
 - Best for: captions, product blurbs, short ad copy.
 - CTA: Rewrite Copy
 
-### 4) Batch Export (Pro)
+### 4) Batch Export (Pro / Max)
 - Process multiple outputs quickly with consistent format.
 - Best for: weekly content ops and SKU refreshes.
-- CTA: Upgrade to Pro
+- CTA: View Pricing
 
 ### 5) Fast Workflow
 - Upload → edit → export in minutes, not hours.

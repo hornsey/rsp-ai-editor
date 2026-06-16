@@ -1,6 +1,6 @@
 // RSP AI Editor — Cloudflare Workers entry point
 import { signToken, verifyToken } from "./session";
-import { getD1, checkEntitlement, consumeCredit, checkRateLimit } from "./db";
+import { getD1, checkEntitlement, consumeCredit, checkRateLimit, getMonthlyCredits, nextResetAt } from "./db";
 import { runAIEdit } from "./ai";
 import { handleGoogleLogin, handleGoogleCallback, handleAuthMe, handleLogout, handleLinkGoogle } from "./auth";
 import type { Env } from "./env";
@@ -71,15 +71,15 @@ async function handleSessionInit(env: Env): Promise<Response> {
   const sessionId = crypto.randomUUID();
   const now = Date.now();
 
-  // New session starts as 'free', resets tomorrow
-  const resetsAt = now + DAY_MS;
+  // New session starts on the free credit window, resets tomorrow.
+  const resetAt = now + DAY_MS;
 
   await db
     .prepare(
-      `INSERT INTO sessions (id, plan, edits_used, edits_limit, resets_at, created_at, updated_at)
-       VALUES (?, 'free', 0, 5, ?, ?, ?)`
+      `INSERT INTO sessions (id, plan, monthly_credits, purchased_credits, credits_used, reset_at, created_at, updated_at)
+       VALUES (?, 'free', 5, 0, 0, ?, ?, ?)`
     )
-    .bind(sessionId, resetsAt, now, now)
+    .bind(sessionId, resetAt, now, now)
     .run();
 
   const token = await signAndEncode(sessionId, env);
@@ -93,9 +93,11 @@ async function handleSessionInit(env: Env): Promise<Response> {
     data: {
       session_id: sessionId,
       plan: "free",
-      edits_used: 0,
-      edits_limit: 5,
-      resets_at: resetsAt,
+      monthly_credits: 5,
+      purchased_credits: 0,
+      credits_used: 0,
+      credits_remaining: 5,
+      reset_at: resetAt,
     },
   }), { status: 200, headers });
 }
@@ -106,40 +108,19 @@ async function handleSessionUsage(req: Request, env: Env): Promise<Response> {
   if (session instanceof Response) return session;
 
   const db = getD1(env);
-  const row = await db
-    .prepare("SELECT plan, edits_used, edits_limit, resets_at FROM sessions WHERE id = ?")
-    .bind(session)
-    .first();
+  const entitlement = await checkEntitlement(db, session);
 
-  if (!row) return error("Session not found", 404);
-
-  const now = Date.now();
-  const resetsAt = row.resets_at as number;
-
-  // Auto-reset if window passed
-  if (now > resetsAt) {
-    const newResetsAt = (row.plan as string) === "free"
-      ? now + DAY_MS
-      : now + MONTH_MS;
-
-    await db
-      .prepare("UPDATE sessions SET edits_used = 0, resets_at = ?, updated_at = ? WHERE id = ?")
-      .bind(newResetsAt, now, session)
-      .run();
-
-    return json({
-      ok: true,
-      data: { plan: row.plan, edits_used: 0, edits_limit: row.edits_limit, resets_at: newResetsAt },
-    });
-  }
+  if (!entitlement.allowed && entitlement.reset_at === 0) return error("Session not found", 404);
 
   return json({
     ok: true,
     data: {
-      plan: row.plan,
-      edits_used: row.edits_used,
-      edits_limit: row.edits_limit,
-      resets_at: row.resets_at,
+      plan: entitlement.plan,
+      monthly_credits: entitlement.monthly_credits,
+      purchased_credits: entitlement.purchased_credits,
+      credits_used: entitlement.credits_used,
+      credits_remaining: entitlement.credits_remaining,
+      reset_at: entitlement.reset_at,
     },
   });
 }
@@ -156,14 +137,14 @@ async function handleEdit(req: Request, env: Env, mode: EditMode): Promise<Respo
   const entitlement = await checkEntitlement(db, session);
   if (!entitlement.allowed) {
     return error(
-      `Daily/monthly limit reached. Upgrade at /pricing`,
+      `No credits remaining. Upgrade or add a credit pack at /pricing`,
       429
     );
   }
 
-  // Check rate limit via KV
+  // Check burst rate limit via KV. Credits remain the source of truth for entitlement.
   const windowMs = entitlement.plan === "free" ? DAY_MS : MONTH_MS;
-  const limit = entitlement.plan === "free" ? 5 : entitlement.plan === "pro" ? 500 : 2500;
+  const limit = Math.max(entitlement.monthly_credits + entitlement.purchased_credits, 1);
 
   const rl = await checkRateLimit(rateLimitKV, session, limit, windowMs);
   if (!rl.allowed) {
@@ -298,30 +279,27 @@ async function handleAdminGrant(req: Request, env: Env): Promise<Response> {
     return error("Forbidden", 403);
   }
 
-  const body = await req.json() as { session_id?: string; plan?: string; duration_days?: number };
+  const body = await req.json() as { session_id?: string; plan?: string; duration_days?: number; purchased_credits?: number };
   if (!body.session_id || !body.plan) return error("Missing session_id or plan");
 
-  const validPlans = ["free", "pro", "team"];
+  const validPlans = ["free", "pro", "max"];
   if (!validPlans.includes(body.plan)) return error(`plan must be: ${validPlans.join(" | ")}`);
 
   const db = getD1(env);
   const now = Date.now();
-  const duration = (body.duration_days || 30) * DAY_MS;
-  const resetsAt = now + duration;
+  const resetAt = body.duration_days ? now + body.duration_days * DAY_MS : nextResetAt(body.plan, now);
+  const monthlyCredits = getMonthlyCredits(body.plan);
+  const purchasedCredits = Math.max(0, Math.floor(body.purchased_credits ?? 0));
 
   await db
     .prepare(
-      `INSERT INTO sessions (id, plan, edits_used, edits_limit, resets_at, created_at, updated_at)
-       VALUES (?, ?, 0, ?, ?, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET plan = ?, edits_limit = ?, resets_at = ?, updated_at = ?`
+      `INSERT INTO sessions (id, plan, monthly_credits, purchased_credits, credits_used, reset_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, 0, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET plan = ?, monthly_credits = ?, purchased_credits = purchased_credits + ?, credits_used = 0, reset_at = ?, updated_at = ?`
     )
     .bind(
-      body.session_id, body.plan,
-      body.plan === "free" ? 5 : body.plan === "pro" ? 500 : 2500,
-      resetsAt, now, now,
-      body.plan,
-      body.plan === "free" ? 5 : body.plan === "pro" ? 500 : 2500,
-      resetsAt, now
+      body.session_id, body.plan, monthlyCredits, purchasedCredits, resetAt, now, now,
+      body.plan, monthlyCredits, purchasedCredits, resetAt, now
     )
     .run();
 
@@ -333,7 +311,7 @@ async function handleAdminGrant(req: Request, env: Env): Promise<Response> {
     .bind(crypto.randomUUID(), body.session_id, adminKey, now)
     .run();
 
-  return json({ ok: true, data: { plan: body.plan, resets_at: resetsAt } });
+  return json({ ok: true, data: { plan: body.plan, monthly_credits: monthlyCredits, purchased_credits: purchasedCredits, reset_at: resetAt } });
 }
 
 // ── Auth helper ────────────────────────────────────────────────────────────

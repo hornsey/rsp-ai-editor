@@ -18,13 +18,19 @@
   "pricing_page": {
     "seo": {
       "title": "Pricing | RSP AI Editor",
-      "description": "Simple pricing for fast AI image and copy editing. Start free, upgrade when you need higher volume and HD exports.",
+      "description": "Simple pricing for fast AI image and copy editing. Start free, then choose Pro, Max, or credit packs when your volume grows.",
       "h1": "Simple Pricing for Fast Editing"
     },
     "plans": {
       "free": {"price": "$0", "cta": "Start Free"},
-      "pro": {"price_monthly": "$12/mo", "price_yearly_equivalent": "$9/mo billed yearly", "cta": "Upgrade to Pro"},
-      "team": {"price": "$39/mo", "cta": "Contact Sales"}
+      "pro": {"price_monthly": "$12/mo", "price_yearly": "$108/year", "credits": "1200/month", "cta": "Choose Pro"},
+      "max": {"price_monthly": "$28/mo", "price_yearly": "$252/year", "credits": "3500/month", "cta": "Choose Max"}
+    },
+    "credit_packs": {
+      "starter": {"price": "$6.9", "credits": "500", "note": "First purchase only"},
+      "standard": {"price": "$26.9", "credits": "1500"},
+      "growth": {"price": "$48.9", "credits": "3000"},
+      "scale": {"price": "$86.9", "credits": "6000"}
     }
   }
 }

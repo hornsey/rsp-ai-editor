@@ -101,26 +101,32 @@ export async function rewriteCopy(
 // ── Types ────────────────────────────────────────────────────────────────
 export interface SessionData {
   session_id: string;
-  plan: "free" | "pro" | "team";
-  edits_used: number;
-  edits_limit: number;
-  resets_at: number;
+  plan: "free" | "pro" | "max";
+  monthly_credits: number;
+  purchased_credits: number;
+  credits_used: number;
+  credits_remaining: number;
+  reset_at: number;
 }
 
 export interface UsageData {
   plan: string;
-  edits_used: number;
-  edits_limit: number;
-  resets_at: number;
+  monthly_credits: number;
+  purchased_credits: number;
+  credits_used: number;
+  credits_remaining: number;
+  reset_at: number;
 }
 
 export interface AuthMeData {
   authenticated: boolean;
   session_id?: string;
   plan?: string;
-  edits_used?: number;
-  edits_limit?: number;
-  resets_at?: number;
+  monthly_credits?: number;
+  purchased_credits?: number;
+  credits_used?: number;
+  credits_remaining?: number;
+  reset_at?: number;
   user?: {
     name?: string | null;
     picture?: string | null;

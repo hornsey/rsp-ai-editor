@@ -12,10 +12,14 @@
       "h1": "Simple Pricing for Fast Editing",
       "free": "Free",
       "pro": "Pro",
-      "team": "Team",
+      "max": "Max",
       "ctaFree": "Start Free",
-      "ctaPro": "Upgrade to Pro",
-      "ctaTeam": "Contact Sales"
+      "ctaPro": "Choose Pro",
+      "ctaMax": "Choose Max",
+      "packStarter": "Starter Pack",
+      "packStandard": "Standard Pack",
+      "packGrowth": "Growth Pack",
+      "packScale": "Scale Pack"
     },
     "faq": {
       "q1": "Do I need an account to start?",
@@ -37,10 +41,14 @@
       "h1": "简单透明的定价",
       "free": "免费版",
       "pro": "专业版",
-      "team": "团队版",
+      "max": "Max 版",
       "ctaFree": "免费开始",
-      "ctaPro": "升级到专业版",
-      "ctaTeam": "联系销售"
+      "ctaPro": "选择专业版",
+      "ctaMax": "选择 Max 版",
+      "packStarter": "Starter 积分包",
+      "packStandard": "Standard 积分包",
+      "packGrowth": "Growth 积分包",
+      "packScale": "Scale 积分包"
     },
     "faq": {
       "q1": "需要先注册才能使用吗？",

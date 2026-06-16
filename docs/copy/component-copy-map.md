@@ -26,10 +26,14 @@
 - `pricing.h1` -> pricing.h1
 - `pricing.plan.free.name` -> pricing.free
 - `pricing.plan.pro.name` -> pricing.pro
-- `pricing.plan.team.name` -> pricing.team
+- `pricing.plan.max.name` -> pricing.max
 - `pricing.plan.free.cta` -> pricing.ctaFree
 - `pricing.plan.pro.cta` -> pricing.ctaPro
-- `pricing.plan.team.cta` -> pricing.ctaTeam
+- `pricing.plan.max.cta` -> pricing.ctaMax
+- `pricing.creditPack.starter.name` -> pricing.packStarter
+- `pricing.creditPack.standard.name` -> pricing.packStandard
+- `pricing.creditPack.growth.name` -> pricing.packGrowth
+- `pricing.creditPack.scale.name` -> pricing.packScale
 
 ## FAQ
 - `faq.item.1.q` -> faq.q1

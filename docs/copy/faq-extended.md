@@ -16,7 +16,10 @@ One successful generated output counts as one edit. Regenerations count separate
 Yes. The Free plan includes limited daily edits and copy rewrites.
 
 ## 6) What do I get with Pro?
-Higher monthly limits, HD exports, no watermark, priority processing, and batch export.
+Pro includes 1,200 monthly credits, HD exports, no watermark, priority processing, and batch export.
+
+## 6.1) What is Max?
+Max is the higher-volume subscription tier with 3,500 monthly credits for power users and heavier workflows.
 
 ## 7) Can I cancel my subscription anytime?
 Yes. Cancellation stops renewal. Access continues until the end of the paid period.
@@ -32,6 +35,9 @@ No. AI outputs may vary. Please review before publishing or commercial use.
 
 ## 11) Do unused monthly credits roll over?
 No. Credits reset each billing cycle.
+
+## 11.1) Do you offer one-time credit packs?
+Yes. We offer Starter, Standard, Growth, and Scale credit packs for overflow usage. The 500-credit Starter Pack is limited to the first purchase only.
 
 ## 12) Is there an unlimited plan?
 No. We use clear usage limits to keep pricing and performance fair.
@@ -56,5 +62,7 @@ Email: [SUPPORT_EMAIL]
   A: One successful generated output counts as one edit. Regenerations count separately.
 - Q: Can I cancel my subscription anytime?
   A: Yes. Cancellation stops renewal. Access continues until the end of the paid period.
+- Q: Do you offer one-time credit packs?
+  A: Yes. We offer Starter, Standard, Growth, and Scale credit packs for overflow usage. The 500-credit Starter Pack is limited to the first purchase only.
 - Q: Are AI outputs always accurate?
   A: No. AI outputs may vary. Please review before publishing or commercial use.

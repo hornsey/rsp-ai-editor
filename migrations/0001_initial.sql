@@ -3,16 +3,17 @@
 
 -- Sessions (anonymous + Google-linked)
 CREATE TABLE sessions (
-  id           TEXT PRIMARY KEY,
-  google_id    TEXT UNIQUE,
-  plan         TEXT NOT NULL DEFAULT 'free',
-  edits_used   INTEGER NOT NULL DEFAULT 0,
-  edits_limit  INTEGER NOT NULL DEFAULT 5,
-  resets_at    INTEGER NOT NULL,
-  name         TEXT,
-  picture      TEXT,
-  created_at   INTEGER NOT NULL,
-  updated_at   INTEGER NOT NULL
+  id                TEXT PRIMARY KEY,
+  google_id         TEXT UNIQUE,
+  plan              TEXT NOT NULL DEFAULT 'free',
+  monthly_credits   INTEGER NOT NULL DEFAULT 5,
+  purchased_credits INTEGER NOT NULL DEFAULT 0,
+  credits_used      INTEGER NOT NULL DEFAULT 0,
+  reset_at          INTEGER NOT NULL,
+  name              TEXT,
+  picture           TEXT,
+  created_at        INTEGER NOT NULL,
+  updated_at        INTEGER NOT NULL
 );
 
 -- Edit tasks
@@ -29,7 +30,7 @@ CREATE TABLE edits (
   FOREIGN KEY (session_id) REFERENCES sessions(id)
 );
 
--- Subscriptions (Pro / Team)
+-- Subscriptions (Pro / Max)
 CREATE TABLE subscriptions (
   id                 TEXT PRIMARY KEY,
   session_id         TEXT NOT NULL UNIQUE,
@@ -62,16 +63,16 @@ CREATE INDEX idx_sessions_google ON sessions(google_id);
 
 -- Seed: pricing tiers
 CREATE TABLE pricing_tiers (
-  plan         TEXT PRIMARY KEY,
-  edits_limit  INTEGER NOT NULL,
-  resets_every TEXT NOT NULL,
-  hd_export    INTEGER NOT NULL,
-  watermark    INTEGER NOT NULL,
-  batch_size   INTEGER NOT NULL,
-  created_at   INTEGER NOT NULL
+  plan              TEXT PRIMARY KEY,
+  monthly_credits   INTEGER NOT NULL,
+  resets_every      TEXT NOT NULL,
+  hd_export         INTEGER NOT NULL,
+  watermark         INTEGER NOT NULL,
+  batch_size        INTEGER NOT NULL,
+  created_at        INTEGER NOT NULL
 );
 
 INSERT INTO pricing_tiers VALUES
-  ('free',  5,    'day',   0, 1, 1,   unixepoch()),
-  ('pro',   500,  'month', 1, 0, 20,  unixepoch()),
-  ('team',  2500, 'month', 1, 0, 20,  unixepoch());
+  ('free', 5,    'day',   0, 1, 1,   unixepoch()),
+  ('pro',  1200, 'month', 1, 0, 20,  unixepoch()),
+  ('max',  3500, 'month', 1, 0, 20,  unixepoch());
