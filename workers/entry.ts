@@ -9,6 +9,7 @@ import type { EditMode } from "./schema";
 const JSON_HEADER = { "Content-Type": "application/json" };
 const DAY_MS = 86400000;
 const MONTH_MS = 30 * DAY_MS;
+const ASSET_TOKEN_TTL_MS = 30 * 60 * 1000;
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), { status, headers: JSON_HEADER });
@@ -16,6 +17,61 @@ function json(data: unknown, status = 200): Response {
 
 function error(msg: string, code = 400): Response {
   return json({ ok: false, error: msg, code }, code);
+}
+
+function toHex(buffer: ArrayBuffer): string {
+  return [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function signAssetToken(key: string, expiresAt: number, env: Env): Promise<string> {
+  const secret = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(env.SESSION_SECRET_KEY),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    secret,
+    new TextEncoder().encode(`${key}.${expiresAt}`)
+  );
+  return toHex(sig);
+}
+
+async function createAssetUrl(req: Request, key: string, env: Env, ttlMs = ASSET_TOKEN_TTL_MS): Promise<string> {
+  const expiresAt = Date.now() + ttlMs;
+  const sig = await signAssetToken(key, expiresAt, env);
+  const url = new URL(req.url);
+  url.pathname = "/api/v1/assets";
+  url.search = "";
+  url.searchParams.set("key", key);
+  url.searchParams.set("expires", String(expiresAt));
+  url.searchParams.set("sig", sig);
+  return url.toString();
+}
+
+async function handleAsset(req: Request, env: Env): Promise<Response> {
+  const url = new URL(req.url);
+  const key = url.searchParams.get("key") || "";
+  const expiresAt = Number(url.searchParams.get("expires") || "0");
+  const sig = url.searchParams.get("sig") || "";
+
+  if (!key || !sig || !Number.isFinite(expiresAt)) return error("Invalid asset URL", 400);
+  if (!key.startsWith("uploads/") && !key.startsWith("outputs/")) return error("Invalid asset key", 400);
+  if (Date.now() > expiresAt) return error("Asset URL expired", 403);
+
+  const expected = await signAssetToken(key, expiresAt, env);
+  if (sig !== expected) return error("Invalid asset signature", 403);
+
+  const bucket = key.startsWith("outputs/") ? env.OUTPUTS : env.UPLOADS;
+  const object = await bucket.get(key);
+  if (!object) return error("Asset not found", 404);
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set("Cache-Control", key.startsWith("outputs/") ? "private, max-age=3600" : "private, max-age=300");
+  return new Response(object.body, { headers });
 }
 
 function getCorsOrigin(req: Request): string | null {
@@ -145,7 +201,7 @@ async function handleSessionUsage(req: Request, env: Env): Promise<Response> {
 }
 
 // ── /api/v1/edit/{mode} ───────────────────────────────────────────────────
-async function handleEdit(req: Request, env: Env, mode: EditMode): Promise<Response> {
+async function handleEdit(req: Request, env: Env, mode: EditMode, ctx: ExecutionContext): Promise<Response> {
   const session = await auth(req, env);
   if (session instanceof Response) return session;
 
@@ -198,7 +254,7 @@ async function handleEdit(req: Request, env: Env, mode: EditMode): Promise<Respo
     customMetadata: { session_id: session, task_id: taskId },
   });
 
-  const inputUrl = `https://placeholder.r2.dev/${inputKey}`; // R2 public URL or signed
+  const inputUrl = await createAssetUrl(req, inputKey, env);
 
   // Consume credit
   await consumeCredit(db, session);
@@ -209,21 +265,27 @@ async function handleEdit(req: Request, env: Env, mode: EditMode): Promise<Respo
       `INSERT INTO edits (id, session_id, mode, status, input_url, credits_used, created_at)
        VALUES (?, ?, ?, 'processing', ?, 1, ?)`
     )
-    .bind(taskId, session, inputUrl, Date.now())
+    .bind(taskId, session, mode, inputUrl, Date.now())
     .run();
 
   // Run AI (non-blocking for fast response — worker returns immediately,
   // caller polls /api/v1/edit/{task_id})
-  runAIEdit(inputUrl, mode, env)
+  const completion = runAIEdit(inputUrl, mode, env)
     .then(async (result) => {
       const outputKey = `outputs/${session}/${taskId}-output.${ext}`;
       // Fetch AI output and store in R2
       const aiResp = await fetch(result.output_url);
-      await env.OUTPUTS.put(outputKey, await aiResp.arrayBuffer());
+      if (!aiResp.ok) throw new Error(`AI output fetch failed ${aiResp.status}`);
+      await env.OUTPUTS.put(outputKey, await aiResp.arrayBuffer(), {
+        httpMetadata: { contentType: aiResp.headers.get("Content-Type") || "image/png" },
+        customMetadata: { session_id: session, task_id: taskId },
+      });
+
+      const outputUrl = await createAssetUrl(req, outputKey, env, 30 * DAY_MS);
 
       await db
         .prepare(`UPDATE edits SET status = 'done', output_url = ? WHERE id = ?`)
-        .bind(`https://placeholder.r2.dev/${outputKey}`, taskId)
+        .bind(outputUrl, taskId)
         .run();
     })
     .catch(async (err: Error) => {
@@ -232,6 +294,8 @@ async function handleEdit(req: Request, env: Env, mode: EditMode): Promise<Respo
         .bind(err.message, taskId)
         .run();
     });
+
+  ctx.waitUntil(completion);
 
   return json({ ok: true, data: { task_id: taskId, status: "processing" } });
 }
@@ -354,7 +418,7 @@ async function signAndEncode(sessionId: string, env: Env): Promise<string> {
 
 // ── Router ────────────────────────────────────────────────────────────────
 export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
+  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     if (req.method === "OPTIONS") return corsPreflight(req);
 
     const url = new URL(req.url);
@@ -363,11 +427,12 @@ export default {
     try {
       let response: Response;
 
-      if (path === "/session/init" && req.method === "POST") response = await handleSessionInit(env);
+      if (path === "/assets" && req.method === "GET") response = await handleAsset(req, env);
+      else if (path === "/session/init" && req.method === "POST") response = await handleSessionInit(env);
       else if (path === "/session/usage" && req.method === "GET") response = await handleSessionUsage(req, env);
       else if (path.match(/^\/edit\/(enhance|remove-bg|restyle)$/) && req.method === "POST") {
         const mode = path.split("/").pop() as EditMode;
-        response = await handleEdit(req, env, mode);
+        response = await handleEdit(req, env, mode, ctx);
       } else if (path.match(/^\/edit\/[a-f0-9-]+$/) && req.method === "GET") {
         response = await handleEditStatus(req, env);
       } else if (path === "/copy/rewrite" && req.method === "POST") response = await handleCopyRewrite(req, env);

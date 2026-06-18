@@ -24,8 +24,8 @@ export async function checkRateLimit(
   const now = Date.now();
   const windowStart = now - windowMs;
 
-  const record = await kv.getWithMetadata<{ count: number; windowStart: number }>(sessionId);
-  const data = record.metadata;
+  const record = await kv.get(sessionId, "json") as { count: number; windowStart: number } | null;
+  const data = record;
 
   if (!data || data.windowStart < windowStart) {
     await kv.put(sessionId, JSON.stringify({ count: 1, windowStart: now }),

@@ -43,4 +43,3 @@ AI_PROVIDER = "fal"
 # FAL_KEY is the fal.ai API key.
 # Set via: npx wrangler secret put FAL_KEY
 # (value stored in Cloudflare, never in code or wrangler.toml)
-FAL_KEY = ""
