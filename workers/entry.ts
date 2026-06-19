@@ -18,20 +18,45 @@ function error(msg: string, code = 400): Response {
   return json({ ok: false, error: msg, code }, code);
 }
 
+function editOutputUrl(req: Request, taskId: string): string {
+  const url = new URL(req.url);
+  return `${url.origin}/api/v1/edit/${taskId}/output`;
+}
+
+function outputContentType(key: string): string {
+  if (key.endsWith(".jpg") || key.endsWith(".jpeg")) return "image/jpeg";
+  if (key.endsWith(".webp")) return "image/webp";
+  return "image/png";
+}
+
+async function withContext<T>(stage: string, operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`${stage}: ${msg}`);
+  }
+}
+
+function isAllowedHost(host: string): boolean {
+  const allowedHosts = new Set([
+    "image-editor.co",
+    "www.image-editor.co",
+    "rsp-ai-editor.sempron450.workers.dev",
+    "localhost",
+    "127.0.0.1",
+  ]);
+
+  return allowedHosts.has(host) || host.endsWith(".sempron450.workers.dev");
+}
+
 function getCorsOrigin(req: Request): string | null {
   const origin = req.headers.get("Origin");
   if (!origin) return null;
 
   try {
     const host = new URL(origin).hostname;
-    const allowedHosts = new Set([
-      "image-editor.co",
-      "www.image-editor.co",
-      "rsp-ai-editor.sempron450.workers.dev",
-      "localhost",
-      "127.0.0.1",
-    ]);
-    return allowedHosts.has(host) ? origin : null;
+    return isAllowedHost(host) ? origin : null;
   } catch {
     return null;
   }
@@ -126,7 +151,9 @@ async function handleSessionUsage(req: Request, env: Env): Promise<Response> {
 }
 
 // ── /api/v1/edit/{mode} ───────────────────────────────────────────────────
-async function handleEdit(req: Request, env: Env, mode: EditMode): Promise<Response> {
+async function handleEdit(req: Request, env: Env, mode: EditMode, ctx: ExecutionContext): Promise<Response> {
+  let stage = "auth";
+  try {
   const session = await auth(req, env);
   if (session instanceof Response) return session;
 
@@ -134,6 +161,7 @@ async function handleEdit(req: Request, env: Env, mode: EditMode): Promise<Respo
   const rateLimitKV = env.RATE_LIMITS;
 
   // Check entitlement
+  stage = "check entitlement";
   const entitlement = await checkEntitlement(db, session);
   if (!entitlement.allowed) {
     return error(
@@ -143,6 +171,7 @@ async function handleEdit(req: Request, env: Env, mode: EditMode): Promise<Respo
   }
 
   // Check burst rate limit via KV. Credits remain the source of truth for entitlement.
+  stage = "check rate limit";
   const windowMs = entitlement.plan === "free" ? DAY_MS : MONTH_MS;
   const limit = Math.max(entitlement.monthly_credits + entitlement.purchased_credits, 1);
 
@@ -152,14 +181,17 @@ async function handleEdit(req: Request, env: Env, mode: EditMode): Promise<Respo
   }
 
   // Parse multipart form
+  stage = "parse multipart form";
   let image: ArrayBuffer | null = null;
   let contentType = "";
+  let filename = "upload.jpg";
   try {
     const fd = await req.formData();
     const file = fd.get("image");
     if (!file || typeof file === "string") return error("Missing 'image' field");
     image = await file.arrayBuffer();
     contentType = file.type || "image/jpeg";
+    filename = file.name || filename;
   } catch {
     return error("Failed to parse form data");
   }
@@ -170,6 +202,7 @@ async function handleEdit(req: Request, env: Env, mode: EditMode): Promise<Respo
   }
 
   // Upload to R2
+  stage = "upload input to R2";
   const taskId = crypto.randomUUID();
   const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg";
   const inputKey = `uploads/${session}/${taskId}-input.${ext}`;
@@ -182,39 +215,61 @@ async function handleEdit(req: Request, env: Env, mode: EditMode): Promise<Respo
   const inputUrl = `https://placeholder.r2.dev/${inputKey}`; // R2 public URL or signed
 
   // Consume credit
+  stage = "consume credit";
   await consumeCredit(db, session);
 
   // Create edit task
+  stage = "create edit task";
   await db
     .prepare(
       `INSERT INTO edits (id, session_id, mode, status, input_url, credits_used, created_at)
-       VALUES (?, ?, ?, 'processing', ?, 1, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
-    .bind(taskId, session, inputUrl, Date.now())
+    .bind(taskId, session, mode, "processing", inputUrl, 1, Date.now())
     .run();
 
   // Run AI (non-blocking for fast response — worker returns immediately,
   // caller polls /api/v1/edit/{task_id})
-  runAIEdit(inputUrl, mode, env)
-    .then(async (result) => {
-      const outputKey = `outputs/${session}/${taskId}-output.${ext}`;
-      // Fetch AI output and store in R2
-      const aiResp = await fetch(result.output_url);
-      await env.OUTPUTS.put(outputKey, await aiResp.arrayBuffer());
+  ctx.waitUntil(
+    runAIEdit(inputUrl, mode, env, { data: image, contentType, filename })
+      .then(async (result) => {
+        const outputExt = result.contentType?.includes("png") ? "png" : ext;
+        const outputKey = `outputs/${session}/${taskId}-output.${outputExt}`;
+        const outputBytes = result.output ?? await fetchAIOutput(result.output_url);
 
-      await db
-        .prepare(`UPDATE edits SET status = 'done', output_url = ? WHERE id = ?`)
-        .bind(`https://placeholder.r2.dev/${outputKey}`, taskId)
-        .run();
-    })
-    .catch(async (err: Error) => {
-      await db
-        .prepare(`UPDATE edits SET status = 'failed', error_msg = ? WHERE id = ?`)
-        .bind(err.message, taskId)
-        .run();
-    });
+        await env.OUTPUTS.put(outputKey, outputBytes, {
+          httpMetadata: { contentType: result.contentType || outputContentType(outputKey) },
+          customMetadata: { session_id: session, task_id: taskId, mode },
+        });
+
+        await db
+          .prepare(`UPDATE edits SET status = 'done', output_url = ? WHERE id = ?`)
+          .bind(`r2://${outputKey}`, taskId)
+          .run();
+      })
+      .catch(async (err: Error) => {
+        await db
+          .prepare(`UPDATE edits SET status = 'failed', error_msg = ? WHERE id = ?`)
+          .bind(err.message, taskId)
+          .run();
+      })
+  );
 
   return json({ ok: true, data: { task_id: taskId, status: "processing" } });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return error(`${stage}: ${msg}`, 500);
+  }
+}
+
+async function fetchAIOutput(outputUrl?: string): Promise<ArrayBuffer> {
+  if (!outputUrl) throw new Error("AI provider returned no output URL or bytes");
+
+  const aiResp = await fetch(outputUrl);
+  if (!aiResp.ok) {
+    throw new Error(`Failed to fetch AI output ${aiResp.status}: ${await aiResp.text()}`);
+  }
+  return aiResp.arrayBuffer();
 }
 
 // ── /api/v1/edit/{task_id} ────────────────────────────────────────────────
@@ -233,17 +288,85 @@ async function handleEditStatus(req: Request, env: Env): Promise<Response> {
 
   if (!row) return error("Task not found", 404);
 
+  const storedOutputUrl = typeof row.output_url === "string" ? row.output_url : null;
+
   return json({
     ok: true,
     data: {
       task_id: row.id,
       status: row.status,
       mode: row.mode,
-      output_url: row.output_url || null,
+      output_url: storedOutputUrl?.startsWith("r2://") ? editOutputUrl(req, String(row.id)) : storedOutputUrl,
       error: row.error_msg || null,
       created_at: row.created_at,
     },
   });
+}
+
+// ── /api/v1/edit/{task_id}/output ──────────────────────────────────────────
+async function handleDebugRembgHealth(env: Env): Promise<Response> {
+  const baseUrl = (env.REMBG_API_URL || "").replace(/\/$/, "");
+  if (!baseUrl) return error("REMBG_API_URL is not configured", 500);
+
+  const target = `${baseUrl}/health`;
+  const started = Date.now();
+
+  try {
+    const upstream = await fetch(target, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json,text/plain,*/*",
+        "User-Agent": "Cloudflare-Worker-rembg-debug",
+      },
+    });
+    const body = await upstream.text();
+
+    return json({
+      ok: upstream.ok,
+      target,
+      status: upstream.status,
+      statusText: upstream.statusText,
+      elapsedMs: Date.now() - started,
+      headers: Object.fromEntries(upstream.headers.entries()),
+      body: body.slice(0, 2000),
+    }, upstream.ok ? 200 : 502);
+  } catch (err) {
+    return json({
+      ok: false,
+      target,
+      elapsedMs: Date.now() - started,
+      error: err instanceof Error ? err.message : String(err),
+    }, 502);
+  }
+}
+
+async function handleEditOutput(req: Request, env: Env): Promise<Response> {
+  const session = await auth(req, env);
+  if (session instanceof Response) return session;
+
+  const url = new URL(req.url);
+  const taskId = url.pathname.split("/").at(-2)!;
+  const db = getD1(env);
+  const row = await db
+    .prepare("SELECT output_url, status FROM edits WHERE id = ? AND session_id = ?")
+    .bind(taskId, session)
+    .first();
+
+  if (!row) return error("Task not found", 404);
+  if (row.status !== "done") return error("Output is not ready", 409);
+
+  const storedOutputUrl = typeof row.output_url === "string" ? row.output_url : "";
+  if (!storedOutputUrl.startsWith("r2://")) return error("Output not stored in R2", 404);
+
+  const outputKey = storedOutputUrl.slice("r2://".length);
+  const object = await env.OUTPUTS.get(outputKey);
+  if (!object) return error("Output object not found", 404);
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  if (!headers.has("Content-Type")) headers.set("Content-Type", outputContentType(outputKey));
+  headers.set("Cache-Control", "private, max-age=3600");
+  return new Response(object.body, { headers });
 }
 
 // ── /api/v1/copy/rewrite ─────────────────────────────────────────────────
@@ -332,7 +455,7 @@ async function signAndEncode(sessionId: string, env: Env): Promise<string> {
 
 // ── Router ────────────────────────────────────────────────────────────────
 export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
+  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     if (req.method === "OPTIONS") return corsPreflight(req);
 
     const url = new URL(req.url);
@@ -345,7 +468,10 @@ export default {
       else if (path === "/session/usage" && req.method === "GET") response = await handleSessionUsage(req, env);
       else if (path.match(/^\/edit\/(enhance|remove-bg|restyle)$/) && req.method === "POST") {
         const mode = path.split("/").pop() as EditMode;
-        response = await handleEdit(req, env, mode);
+        response = await handleEdit(req, env, mode, ctx);
+      } else if (path === "/debug/rembg-health" && req.method === "GET") response = await handleDebugRembgHealth(env);
+      else if (path.match(/^\/edit\/[a-f0-9-]+\/output$/) && req.method === "GET") {
+        response = await handleEditOutput(req, env);
       } else if (path.match(/^\/edit\/[a-f0-9-]+$/) && req.method === "GET") {
         response = await handleEditStatus(req, env);
       } else if (path === "/copy/rewrite" && req.method === "POST") response = await handleCopyRewrite(req, env);

@@ -5,9 +5,17 @@ import type { Env } from "./env";
 import type { EditMode } from "./schema";
 
 export interface AIResult {
-  output_url: string;
+  output_url?: string;
+  output?: ArrayBuffer;
+  contentType?: string;
   width?: number;
   height?: number;
+}
+
+export interface AIInputAsset {
+  data: ArrayBuffer;
+  contentType: string;
+  filename: string;
 }
 
 const MODEL_SLUG = "openai/gpt-image-2/edit";
@@ -19,8 +27,14 @@ const POLL_MAX_ATTEMPTS = 60; // ~2 minutes
 export async function runAIEdit(
   inputR2Url: string,
   mode: EditMode,
-  env: Env
+  env: Env,
+  inputAsset?: AIInputAsset
 ): Promise<AIResult> {
+  if (mode === "remove-bg") {
+    if (!inputAsset) throw new Error("remove-bg requires the original uploaded image bytes");
+    return runRembgRemoveBg(inputAsset, env);
+  }
+
   const provider = env.AI_PROVIDER || "fal";
 
   switch (provider) {
@@ -30,6 +44,53 @@ export async function runAIEdit(
     case "cloudinary":  return runCloudinary(inputR2Url, mode, env);
     default:            throw new Error(`Unknown AI_PROVIDER: ${provider}`);
   }
+}
+
+// ── rembg HTTP API ─────────────────────────────────────────────────────────
+async function runRembgRemoveBg(input: AIInputAsset, env: Env): Promise<AIResult> {
+  const apiUrl = (env.REMBG_API_URL || "http://43.137.51.88:8000").replace(/\/+$/, "");
+  const apiKey = env.REMBG_API_KEY;
+  if (!apiKey) throw new Error("REMBG_API_KEY not set — set it as a Wrangler secret.");
+
+  const model = env.REMBG_MODEL || "general";
+  if (!["general", "human"].includes(model)) {
+    throw new Error("REMBG_MODEL must be either 'general' or 'human'");
+  }
+
+  const formData = new FormData();
+  formData.append(
+    "file",
+    new Blob([input.data], { type: input.contentType || "application/octet-stream" }),
+    input.filename || "upload.jpg"
+  );
+
+  const resp = await fetch(`${apiUrl}/remove-bg?model=${encodeURIComponent(model)}`, {
+    method: "POST",
+    headers: { "X-API-Key": apiKey },
+    body: formData,
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text();
+    let detail = body;
+    try {
+      const parsed = JSON.parse(body) as { detail?: unknown };
+      if (typeof parsed.detail === "string") detail = parsed.detail;
+    } catch {
+      // Keep the raw provider body for non-JSON failures.
+    }
+    throw new Error(`rembg failed ${resp.status}: ${detail || resp.statusText}`);
+  }
+
+  const contentType = resp.headers.get("Content-Type") || "image/png";
+  if (!contentType.toLowerCase().includes("image/png")) {
+    throw new Error(`rembg returned unexpected content type: ${contentType}`);
+  }
+
+  return {
+    output: await resp.arrayBuffer(),
+    contentType,
+  };
 }
 
 // ── fal.ai ─────────────────────────────────────────────────────────────────

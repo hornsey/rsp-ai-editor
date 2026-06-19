@@ -22,6 +22,18 @@ interface OAuthState {
   redirectUri: string;
 }
 
+function isAllowedHost(host: string): boolean {
+  const allowedHosts = new Set([
+    "image-editor.co",
+    "www.image-editor.co",
+    "rsp-ai-editor.sempron450.workers.dev",
+    "localhost",
+    "127.0.0.1",
+  ]);
+
+  return allowedHosts.has(host) || host.endsWith(".sempron450.workers.dev");
+}
+
 function getOAuthConfig(env: Env) {
   const clientId = env.GOOGLE_CLIENT_ID;
   const clientSecret = env.GOOGLE_CLIENT_SECRET;
@@ -42,15 +54,8 @@ function getSafeReturnTo(req: Request): string {
 
   try {
     const returnUrl = new URL(raw);
-    const allowedHosts = new Set([
-      "image-editor.co",
-      "www.image-editor.co",
-      "rsp-ai-editor.sempron450.workers.dev",
-      "localhost",
-      "127.0.0.1",
-    ]);
 
-    if (allowedHosts.has(returnUrl.hostname)) return returnUrl.toString();
+    if (isAllowedHost(returnUrl.hostname)) return returnUrl.toString();
   } catch {
     // Fall through to default.
   }

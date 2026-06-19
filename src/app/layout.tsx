@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://rsp-ai-editor.com"),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "RSP AI Editor | Edit Images & Copy in Seconds",
     template: "%s | RSP AI Editor",
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://rsp-ai-editor.com",
+    url: siteUrl,
     siteName: "RSP AI Editor",
     title: "RSP AI Editor | Edit Images & Copy in Seconds",
     description: "Upload your photo, pick an AI mode, and download in seconds. Free, instant, no account needed.",

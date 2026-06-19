@@ -28,4 +28,9 @@ export interface Env {
   CLOUDINARY_API_SECRET?: string;
   AI_GATEWAY_ENDPOINT?: string;
   FAL_KEY?: string;
+
+  // rembg HTTP API for background removal
+  REMBG_API_URL?: string;
+  REMBG_API_KEY?: string;
+  REMBG_MODEL?: "general" | "human";
 }
