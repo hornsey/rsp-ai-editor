@@ -7,8 +7,10 @@
 wrangler d1 create rsp-db
 # → 输出 database_id，填入 workers/wrangler.toml
 
-# 2. 运行 migration
+# 2. 运行 migration（新库跑 0001；老库升级到 credits schema 额外跑 0002）
 wrangler d1 execute rsp-db --file=./migrations/0001_initial.sql --remote
+# 如果数据库是在旧 edit-count schema 下创建的，再执行：
+wrangler d1 execute rsp-db --file=./migrations/0002_credits_model.sql --remote
 
 # 3. 创建 R2 buckets
 wrangler r2 bucket create rsp-uploads
@@ -36,7 +38,7 @@ wrangler secret put CLOUDINARY_CLOUD_NAME
 wrangler secret put CLOUDINARY_API_KEY
 wrangler secret put CLOUDINARY_API_SECRET
 
-# 6. 部署 Workers
+# 6. 部署 Workers（确认 migration 已完成后再部署）
 wrangler deploy --config workers/wrangler.toml
 
 # 7. 验证
@@ -94,6 +96,8 @@ wrangler dev --config workers/wrangler.toml --local
 | `restyle` | "Transform the style of this image while keeping the subject and composition intact — apply a fresh, modern aesthetic." |
 
 **API 限制:** fal 队列最长轮询 ~2 分钟（60 × 2s），超时则标记 `failed`。
+
+**输入资源签名 URL TTL:** 当前为 60 分钟，避免队列等待或上游拉取延迟导致 input URL 过期。
 
 ## 资源状态
 

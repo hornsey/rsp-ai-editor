@@ -27,7 +27,7 @@ export default function BlogPostPage() {
         <section className="mt-10 space-y-4">
           {[
             ["1", "Upload your image", "Use a JPG, PNG, or WebP file up to 10MB. The workflow is designed for a no-signup first trial."],
-            ["2", "Choose your task", "Pick Auto Enhance, Background Remove, Style Restyle, or open Copy Rewrite for text variants."],
+            ["2", "Choose your task", "Pick Auto Enhance, Background Remove, or Style Restyle. Copy Rewrite is coming soon in this build."],
             ["3", "Review and export", "Download standard quality on Free. Upgrade when you need HD exports, no watermark, or higher volume."],
           ].map(([step, title, body]) => (
             <div key={step} className="soft-card p-6">
@@ -47,7 +47,7 @@ export default function BlogPostPage() {
         <section className="mt-12">
           <h2 className="text-2xl font-extrabold">When Free is enough</h2>
           <p className="mt-3 leading-7 text-on-surface-variant">
-            Free is meant for quick trials and occasional edits: 5 image edits per day and 10 copy rewrites per day. It is the right fit when you need to test the output quality or finish a small personal task.
+            Free is meant for quick trials and occasional edits: 5 image edits per day in the current build. It is the right fit when you need to test output quality or finish a small personal task while copy rewrite is still being finished.
           </p>
         </section>
 

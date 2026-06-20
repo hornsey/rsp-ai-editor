@@ -4,6 +4,9 @@ import type { Env } from "./env";
 
 const DAY_MS = 86400000;
 const MONTH_MS = 30 * DAY_MS;
+const REQUIRED_SESSION_COLUMNS = ["monthly_credits", "purchased_credits", "credits_used", "reset_at"] as const;
+
+let creditsSchemaVerified = false;
 
 export type Plan = "free" | "pro" | "max";
 
@@ -52,6 +55,22 @@ export function nextResetAt(plan: string, now = Date.now()): number {
   return now + getResetWindowMs(plan);
 }
 
+export async function ensureCreditsSchema(db: D1Database): Promise<void> {
+  if (creditsSchemaVerified) return;
+
+  const tableInfo = await db.prepare("PRAGMA table_info(sessions)").all<{ name: string }>();
+  const columns = new Set((tableInfo.results || []).map((column) => column.name));
+  const missingColumns = REQUIRED_SESSION_COLUMNS.filter((column) => !columns.has(column));
+
+  if (missingColumns.length > 0) {
+    throw new Error(
+      `Database schema is outdated. Missing sessions columns: ${missingColumns.join(", ")}. Run wrangler d1 execute rsp-db --file=./migrations/0002_credits_model.sql --remote before deploying this Worker build.`
+    );
+  }
+
+  creditsSchemaVerified = true;
+}
+
 function creditsRemaining(monthlyCredits: number, purchasedCredits: number, creditsUsed: number): number {
   return Math.max(0, monthlyCredits - creditsUsed) + Math.max(0, purchasedCredits);
 }
@@ -91,6 +110,7 @@ export async function checkEntitlement(
   db: D1Database,
   sessionId: string
 ): Promise<CreditEntitlement> {
+  await ensureCreditsSchema(db);
   const now = Date.now();
 
   const result = await db
@@ -141,6 +161,7 @@ export async function checkEntitlement(
 
 // Consume one credit. Use monthly allocation first, then decrement purchased credits.
 export async function consumeCredit(db: D1Database, sessionId: string): Promise<void> {
+  await ensureCreditsSchema(db);
   const now = Date.now();
   const row = await db
     .prepare("SELECT monthly_credits, purchased_credits, credits_used FROM sessions WHERE id = ?")

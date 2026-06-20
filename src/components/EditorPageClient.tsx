@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import UploadZone from "@/components/UploadZone";
-import CopyRewritePanel from "@/components/CopyRewritePanel";
 import HistoryPanel from "@/components/HistoryPanel";
 import { initSession, getUsage, submitEdit, getEditStatus, type EditStatus } from "@/lib/api";
 import { addHistory } from "@/lib/history";
+import { copyRewriteStatusMessage } from "@/lib/features";
 
 export type EditMode = "enhance" | "remove-bg" | "restyle";
 type ErrorType = "format" | "size" | "network" | "rate_limit" | "server" | null;
@@ -55,7 +55,6 @@ export default function EditorPageClient({ initialMode = "enhance" }: { initialM
   const [apiError, setApiError] = useState<string | null>(null);
   const [creditsUsed, setCreditsUsed] = useState<number | null>(null);
   const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
-  const [showCopyRewrite, setShowCopyRewrite] = useState(false);
 
   const handleFileSelect = useCallback((file: File) => {
     setErrorType(null);
@@ -194,7 +193,7 @@ export default function EditorPageClient({ initialMode = "enhance" }: { initialM
         <div className="soft-card flex flex-wrap items-center justify-between gap-3 p-4">
           <div>
             <p className="text-sm font-bold">Free limits</p>
-            <p className="text-sm text-on-surface-variant">5 image edits/day · 10 copy rewrites/day</p>
+            <p className="text-sm text-on-surface-variant">5 image edits/day</p>
           </div>
           {creditsUsed !== null && creditsRemaining !== null ? (
             <span className="rounded-full bg-primary-container px-3 py-1 text-sm font-bold text-on-primary-container">
@@ -263,20 +262,21 @@ export default function EditorPageClient({ initialMode = "enhance" }: { initialM
             </div>
           )}
 
-          <button
-            onClick={() => setShowCopyRewrite((show) => !show)}
-            className="soft-card flex w-full items-center justify-between p-4 text-left hover:border-primary"
-          >
-            <span className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary">edit_note</span>
-              <span>
-                <span className="block text-sm font-extrabold">Copy Rewrite</span>
-                <span className="block text-xs text-on-surface-variant">Generate clean, persuasive, or concise copy variants.</span>
+          <div className="soft-card p-4">
+            <div className="flex items-start justify-between gap-3">
+              <span className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary">edit_note</span>
+                <span>
+                  <span className="block text-sm font-extrabold">Copy Rewrite</span>
+                  <span className="block text-xs text-on-surface-variant">Coming soon</span>
+                </span>
               </span>
-            </span>
-            <span className={`material-symbols-outlined transition ${showCopyRewrite ? "rotate-180" : ""}`}>expand_more</span>
-          </button>
-          {showCopyRewrite ? <CopyRewritePanel /> : null}
+              <span className="rounded-full bg-primary-container px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-on-primary-container">
+                Disabled
+              </span>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-on-surface-variant">{copyRewriteStatusMessage}</p>
+          </div>
         </div>
 
         <div className="space-y-5">

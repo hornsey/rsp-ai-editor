@@ -1,6 +1,6 @@
 // RSP AI Editor — Cloudflare Workers entry point
 import { signAssetAccessToken, signToken, verifyAssetAccessToken, verifyToken } from "./session";
-import { getD1, checkEntitlement, consumeCredit, checkRateLimit, getMonthlyCredits, nextResetAt } from "./db";
+import { getD1, checkEntitlement, consumeCredit, checkRateLimit, getMonthlyCredits, nextResetAt, ensureCreditsSchema } from "./db";
 import { runAIEdit } from "./ai";
 import { handleGoogleLogin, handleGoogleCallback, handleAuthMe, handleLogout, handleLinkGoogle } from "./auth";
 import type { Env } from "./env";
@@ -9,7 +9,8 @@ import type { EditMode } from "./schema";
 const JSON_HEADER = { "Content-Type": "application/json" };
 const DAY_MS = 86400000;
 const MONTH_MS = 30 * DAY_MS;
-const ASSET_URL_TTL_MS = 10 * 60 * 1000;
+// Signed input URLs must survive queue delay + provider fetch latency.
+const ASSET_URL_TTL_MS = 60 * 60 * 1000;
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), { status, headers: JSON_HEADER });
@@ -102,13 +103,16 @@ function corsPreflight(req: Request): Response {
 
 // ── /api/v1/session/init ──────────────────────────────────────────────────
 async function handleSessionInit(req: Request, env: Env): Promise<Response> {
+  const db = getD1(env);
+  await ensureCreditsSchema(db);
+
   const existingToken = req.headers.get("Cookie")?.match(/rsp_session=([^;]+)/)?.[1]
     || req.headers.get("X-Session-ID");
 
   if (existingToken) {
     const existing = await verifyToken(existingToken, env);
     if (existing.valid) {
-      const row = await getD1(env)
+      const row = await db
         .prepare("SELECT id, plan, monthly_credits, purchased_credits, credits_used, reset_at FROM sessions WHERE id = ?")
         .bind(existing.sessionId)
         .first();
@@ -134,7 +138,6 @@ async function handleSessionInit(req: Request, env: Env): Promise<Response> {
     }
   }
 
-  const db = getD1(env);
   const sessionId = crypto.randomUUID();
   const now = Date.now();
 
@@ -445,25 +448,10 @@ async function handleCopyRewrite(req: Request, env: Env): Promise<Response> {
   const session = await auth(req, env);
   if (session instanceof Response) return session;
 
-  const body = await req.json() as { text?: string; style?: string };
-  if (!body.text) return error("Missing 'text' field");
-
-  const style = body.style || "clean";
-  if (!["clean", "persuasive", "concise"].includes(style)) {
-    return error("style must be: clean | persuasive | concise");
-  }
-
-  // For now, return placeholder — integrate LLM API (e.g. CF Workers AI chat)
-  return json({
-    ok: true,
-    data: {
-      versions: [
-        `[${style}] ${body.text}`,
-        `[${style} v2] ${body.text} — enhanced`,
-        `[${style} v3] ${body.text} (final)`,
-      ],
-    },
-  });
+  return error(
+    "Copy rewrite is temporarily disabled in this build until the production AI rewrite backend is ready.",
+    501
+  );
 }
 
 // ── /api/v1/admin/grant ───────────────────────────────────────────────────
@@ -480,6 +468,7 @@ async function handleAdminGrant(req: Request, env: Env): Promise<Response> {
   if (!validPlans.includes(body.plan)) return error(`plan must be: ${validPlans.join(" | ")}`);
 
   const db = getD1(env);
+  await ensureCreditsSchema(db);
   const now = Date.now();
   const resetAt = body.duration_days ? now + body.duration_days * DAY_MS : nextResetAt(body.plan, now);
   const monthlyCredits = getMonthlyCredits(body.plan);

@@ -3,7 +3,7 @@
 
 import type { Env } from "./env";
 import { signToken, verifyToken } from "./session";
-import { getMonthlyCredits, nextResetAt } from "./db";
+import { ensureCreditsSchema, getMonthlyCredits, nextResetAt } from "./db";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -157,6 +157,7 @@ export async function handleGoogleCallback(req: Request, env: Env): Promise<Resp
   const googleUser = await getGoogleUserInfo(tokens.access_token);
 
   const db = env.DB;
+  await ensureCreditsSchema(db);
   const now = Date.now();
 
   const existing = await db
@@ -206,12 +207,14 @@ export async function handleAuthMe(req: Request, env: Env): Promise<Response> {
     });
   }
 
-  const row = await env.DB
+  await ensureCreditsSchema(env.DB);
+
+  const sessionRow = await env.DB
     .prepare("SELECT id, google_id, plan, monthly_credits, purchased_credits, credits_used, reset_at, name, picture FROM sessions WHERE id = ?")
     .bind(result.sessionId)
     .first();
 
-  if (!row) {
+  if (!sessionRow) {
     return new Response(JSON.stringify({ ok: true, data: { authenticated: false } }), {
       headers: { "Content-Type": "application/json" },
     });
@@ -220,15 +223,15 @@ export async function handleAuthMe(req: Request, env: Env): Promise<Response> {
   return new Response(JSON.stringify({
     ok: true,
     data: {
-      authenticated: Boolean(row.google_id),
-      session_id: row.id,
-      plan: row.plan,
-      monthly_credits: row.monthly_credits,
-      purchased_credits: row.purchased_credits,
-      credits_used: row.credits_used,
-      credits_remaining: Math.max(0, Number(row.monthly_credits) - Number(row.credits_used)) + Math.max(0, Number(row.purchased_credits)),
-      reset_at: row.reset_at,
-      user: row.google_id ? { name: row.name, picture: row.picture } : null,
+      authenticated: Boolean(sessionRow.google_id),
+      session_id: sessionRow.id,
+      plan: sessionRow.plan,
+      monthly_credits: sessionRow.monthly_credits,
+      purchased_credits: sessionRow.purchased_credits,
+      credits_used: sessionRow.credits_used,
+      credits_remaining: Math.max(0, Number(sessionRow.monthly_credits) - Number(sessionRow.credits_used)) + Math.max(0, Number(sessionRow.purchased_credits)),
+      reset_at: sessionRow.reset_at,
+      user: sessionRow.google_id ? { name: sessionRow.name, picture: sessionRow.picture } : null,
     },
   }), { headers: { "Content-Type": "application/json" } });
 }

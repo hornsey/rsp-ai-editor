@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Features for Fast AI Editing",
-  description: "Auto Enhance, Background Remove, Style Restyle, and copy rewrite workflows for fast image and copy editing.",
+  description: "Auto Enhance, Background Remove, and Style Restyle workflows for fast image editing.",
 };
 
 const features = [
@@ -27,9 +27,9 @@ const features = [
   },
   {
     icon: "edit_note",
-    title: "Copy Rewrite",
-    description: "Turn one caption, product line, or short description into three tone variants: clean, persuasive, concise.",
-    fit: "Best for titles, captions, listing descriptions, and call-to-action copy.",
+    title: "Copy Rewrite (Coming Soon)",
+    description: "The rewrite workflow stays disabled in this build until the production AI backend is ready.",
+    fit: "Planned for titles, captions, listing descriptions, and short CTA copy once the backend is live.",
   },
 ];
 

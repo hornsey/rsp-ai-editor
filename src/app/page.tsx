@@ -15,9 +15,9 @@ const taskCards = [
   },
   {
     icon: "edit_note",
-    title: "Smart Rewrite",
-    description: "Generate clean, persuasive, or concise copy variants beside your visual edit.",
-    href: "/editor",
+    title: "Copy Rewrite (Coming Soon)",
+    description: "The rewrite workflow is temporarily hidden until the real AI backend is ready.",
+    href: "/features",
   },
 ];
 
@@ -35,7 +35,7 @@ const useCases = [
 
 const faqs = [
   ["Do I need an account to start?", "No. You can try core editing before signup."],
-  ["How many free edits are included?", "The Free plan is designed for quick trials: 5 image edits per day and 10 copy rewrites per day."],
+  ["How many free edits are included?", "The current build is designed for quick image trials: 5 image edits per day. Copy rewrite is coming soon."],
   ["Is output always perfect?", "AI quality can vary. The editor keeps the workflow simple so you can retry or switch modes quickly."],
 ];
 
@@ -49,7 +49,7 @@ export default function HomePage() {
             Edit Images &amp; Copy in Seconds - No Signup Required
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-on-surface-variant">
-            RSP AI Editor helps you enhance photos, remove backgrounds, and rewrite captions in one fast workflow.
+            RSP AI Editor helps you enhance photos, remove backgrounds, and restyle visuals in one fast workflow.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/editor" className="primary-button">
@@ -138,7 +138,7 @@ export default function HomePage() {
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {[
             ["1", "Upload", "Drag in a supported image up to 10MB."],
-            ["2", "Pick a mode", "Choose enhance, background remove, restyle, or copy rewrite."],
+            ["2", "Pick a mode", "Choose enhance, background remove, or restyle."],
             ["3", "Export", "Download standard quality or upgrade when HD/no watermark matters."],
           ].map(([step, title, body]) => (
             <div key={step} className="soft-card p-6">
@@ -174,7 +174,7 @@ export default function HomePage() {
           <p className="eyebrow mb-3">Pricing preview</p>
           <h2 className="text-3xl font-extrabold">Free for trials. Pro and Max when volume grows.</h2>
           <p className="mt-4 leading-7 text-on-surface-variant">
-            Free includes 5 image edits/day and 10 copy rewrites/day. Pro includes 1,200 monthly credits, Max includes 3,500 monthly credits, and both paid plans unlock HD exports, no watermark, priority processing, and batch export.
+            Free includes 5 image edits/day. Pro includes 1,200 monthly credits, Max includes 3,500 monthly credits, and both paid plans unlock HD exports, no watermark, priority processing, and batch export.
           </p>
           <Link href="/pricing" className="primary-button mt-6">
             View Pricing

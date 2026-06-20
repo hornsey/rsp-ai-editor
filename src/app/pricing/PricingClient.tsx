@@ -19,7 +19,7 @@ const plans = [
     tone: "neutral",
     features: [
       "5 image edits per day",
-      "10 copy rewrites per day",
+      "Copy rewrite coming soon",
       "Standard export quality",
       "Local session history only",
       "Watermark may apply to exports",
