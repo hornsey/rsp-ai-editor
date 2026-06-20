@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, type KeyboardEvent } from "react";
 
 interface UploadZoneProps {
   onFileSelect: (file: File) => void;
@@ -63,6 +63,14 @@ export default function UploadZone({
     if (files && files.length > 0) {
       handleFile(files[0]);
     }
+    e.target.value = "";
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleClick();
+    }
   };
 
   return (
@@ -74,6 +82,10 @@ export default function UploadZone({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label="Upload image file"
     >
       <input
         ref={fileInputRef}
@@ -92,6 +104,18 @@ export default function UploadZone({
       <p className="text-sm text-on-surface-variant">
         Drop your image here or click to upload — JPG, PNG, WebP up to {maxSizeMB}MB
       </p>
+
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleClick();
+        }}
+        className="primary-button mt-4"
+      >
+        <span className="material-symbols-outlined text-lg">upload</span>
+        Click to Upload
+      </button>
       
       {error && (
         <p className="mt-2 text-sm text-error">{error}</p>

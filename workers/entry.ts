@@ -1,5 +1,5 @@
 // RSP AI Editor — Cloudflare Workers entry point
-import { signToken, verifyToken } from "./session";
+import { signAssetAccessToken, signToken, verifyAssetAccessToken, verifyToken } from "./session";
 import { getD1, checkEntitlement, consumeCredit, checkRateLimit, getMonthlyCredits, nextResetAt } from "./db";
 import { runAIEdit } from "./ai";
 import { handleGoogleLogin, handleGoogleCallback, handleAuthMe, handleLogout, handleLinkGoogle } from "./auth";
@@ -9,6 +9,7 @@ import type { EditMode } from "./schema";
 const JSON_HEADER = { "Content-Type": "application/json" };
 const DAY_MS = 86400000;
 const MONTH_MS = 30 * DAY_MS;
+const ASSET_URL_TTL_MS = 10 * 60 * 1000;
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), { status, headers: JSON_HEADER });
@@ -21,6 +22,15 @@ function error(msg: string, code = 400): Response {
 function editOutputUrl(req: Request, taskId: string): string {
   const url = new URL(req.url);
   return `${url.origin}/api/v1/edit/${taskId}/output`;
+}
+
+async function editInputUrl(req: Request, env: Env, taskId: string, key: string): Promise<string> {
+  const url = new URL(req.url);
+  const token = await signAssetAccessToken(
+    { key, taskId, expiresAt: Date.now() + ASSET_URL_TTL_MS },
+    env
+  );
+  return `${url.origin}/api/v1/edit/${taskId}/input?token=${encodeURIComponent(token)}`;
 }
 
 function outputContentType(key: string): string {
@@ -91,7 +101,39 @@ function corsPreflight(req: Request): Response {
 }
 
 // ── /api/v1/session/init ──────────────────────────────────────────────────
-async function handleSessionInit(env: Env): Promise<Response> {
+async function handleSessionInit(req: Request, env: Env): Promise<Response> {
+  const existingToken = req.headers.get("Cookie")?.match(/rsp_session=([^;]+)/)?.[1]
+    || req.headers.get("X-Session-ID");
+
+  if (existingToken) {
+    const existing = await verifyToken(existingToken, env);
+    if (existing.valid) {
+      const row = await getD1(env)
+        .prepare("SELECT id, plan, monthly_credits, purchased_credits, credits_used, reset_at FROM sessions WHERE id = ?")
+        .bind(existing.sessionId)
+        .first();
+
+      if (row) {
+        const monthlyCredits = Number(row.monthly_credits ?? 5);
+        const purchasedCredits = Number(row.purchased_credits ?? 0);
+        const creditsUsed = Number(row.credits_used ?? 0);
+
+        return json({
+          ok: true,
+          data: {
+            session_id: row.id,
+            plan: row.plan,
+            monthly_credits: monthlyCredits,
+            purchased_credits: purchasedCredits,
+            credits_used: creditsUsed,
+            credits_remaining: Math.max(0, monthlyCredits - creditsUsed) + Math.max(0, purchasedCredits),
+            reset_at: row.reset_at,
+          },
+        });
+      }
+    }
+  }
+
   const db = getD1(env);
   const sessionId = crypto.randomUUID();
   const now = Date.now();
@@ -151,7 +193,7 @@ async function handleSessionUsage(req: Request, env: Env): Promise<Response> {
 }
 
 // ── /api/v1/edit/{mode} ───────────────────────────────────────────────────
-async function handleEdit(req: Request, env: Env, mode: EditMode, ctx: ExecutionContext): Promise<Response> {
+async function handleEdit(req: Request, env: Env, mode: EditMode, ctx: { waitUntil(promise: Promise<unknown>): void }): Promise<Response> {
   let stage = "auth";
   try {
   const session = await auth(req, env);
@@ -212,7 +254,7 @@ async function handleEdit(req: Request, env: Env, mode: EditMode, ctx: Execution
     customMetadata: { session_id: session, task_id: taskId },
   });
 
-  const inputUrl = `https://placeholder.r2.dev/${inputKey}`; // R2 public URL or signed
+  const inputUrl = await editInputUrl(req, env, taskId, inputKey);
 
   // Consume credit
   stage = "consume credit";
@@ -327,7 +369,13 @@ async function handleDebugRembgHealth(env: Env): Promise<Response> {
       status: upstream.status,
       statusText: upstream.statusText,
       elapsedMs: Date.now() - started,
-      headers: Object.fromEntries(upstream.headers.entries()),
+      headers: (() => {
+        const headerMap: Record<string, string> = {};
+        upstream.headers.forEach((value, key) => {
+          headerMap[key] = value;
+        });
+        return headerMap;
+      })(),
       body: body.slice(0, 2000),
     }, upstream.ok ? 200 : 502);
   } catch (err) {
@@ -366,6 +414,29 @@ async function handleEditOutput(req: Request, env: Env): Promise<Response> {
   object.writeHttpMetadata(headers);
   if (!headers.has("Content-Type")) headers.set("Content-Type", outputContentType(outputKey));
   headers.set("Cache-Control", "private, max-age=3600");
+  return new Response(object.body, { headers });
+}
+
+async function handleEditInput(req: Request, env: Env): Promise<Response> {
+  const url = new URL(req.url);
+  const taskId = url.pathname.split("/").at(-2)!;
+  const token = url.searchParams.get("token");
+  if (!token) return error("Missing asset token", 401);
+
+  const tokenResult = await verifyAssetAccessToken(token, env);
+  if (!tokenResult.valid) {
+    const invalidToken = tokenResult as { valid: false; reason: string };
+    return error(`Unauthorized: ${invalidToken.reason}`, 401);
+  }
+  if (tokenResult.payload.taskId !== taskId) return error("Unauthorized: task mismatch", 401);
+
+  const object = await env.UPLOADS.get(tokenResult.payload.key);
+  if (!object) return error("Input object not found", 404);
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  if (!headers.has("Content-Type")) headers.set("Content-Type", outputContentType(tokenResult.payload.key));
+  headers.set("Cache-Control", "private, max-age=300");
   return new Response(object.body, { headers });
 }
 
@@ -445,7 +516,10 @@ async function auth(req: Request, env: Env): Promise<string | Response> {
   if (!token) return error("Unauthorized: no session token", 401);
 
   const result = await verifyToken(token, env);
-  if (!result.valid) return error(`Unauthorized: ${result.reason}`, 401);
+  if (!result.valid) {
+    const invalidToken = result as { valid: false; reason: string };
+    return error(`Unauthorized: ${invalidToken.reason}`, 401);
+  }
   return result.sessionId;
 }
 
@@ -455,7 +529,7 @@ async function signAndEncode(sessionId: string, env: Env): Promise<string> {
 
 // ── Router ────────────────────────────────────────────────────────────────
 export default {
-  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(req: Request, env: Env, ctx: { waitUntil(promise: Promise<unknown>): void }): Promise<Response> {
     if (req.method === "OPTIONS") return corsPreflight(req);
 
     const url = new URL(req.url);
@@ -464,12 +538,15 @@ export default {
     try {
       let response: Response;
 
-      if (path === "/session/init" && req.method === "POST") response = await handleSessionInit(env);
+      if (path === "/session/init" && req.method === "POST") response = await handleSessionInit(req, env);
       else if (path === "/session/usage" && req.method === "GET") response = await handleSessionUsage(req, env);
       else if (path.match(/^\/edit\/(enhance|remove-bg|restyle)$/) && req.method === "POST") {
         const mode = path.split("/").pop() as EditMode;
         response = await handleEdit(req, env, mode, ctx);
       } else if (path === "/debug/rembg-health" && req.method === "GET") response = await handleDebugRembgHealth(env);
+      else if (path.match(/^\/edit\/[a-f0-9-]+\/input$/) && req.method === "GET") {
+        response = await handleEditInput(req, env);
+      }
       else if (path.match(/^\/edit\/[a-f0-9-]+\/output$/) && req.method === "GET") {
         response = await handleEditOutput(req, env);
       } else if (path.match(/^\/edit\/[a-f0-9-]+$/) && req.method === "GET") {

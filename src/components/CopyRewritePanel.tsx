@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { rewriteCopy } from "@/lib/api";
+import { initSession, rewriteCopy } from "@/lib/api";
 
 const COPY_STYLES = [
   {
@@ -39,6 +39,7 @@ export default function CopyRewritePanel() {
     setResults([]);
 
     try {
+      await initSession();
       const data = await rewriteCopy(inputText, selectedStyle);
       setResults(data.versions);
     } catch (err) {
