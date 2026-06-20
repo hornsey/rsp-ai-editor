@@ -43,8 +43,6 @@ AI_PROVIDER = "fal"
 # FAL_KEY is the fal.ai API key.
 # Set via: npx wrangler secret put FAL_KEY
 # (value stored in Cloudflare, never in code or wrangler.toml)
-FAL_KEY = ""
-
 # Dedicated rembg service for remove-bg mode.
 # REMBG_API_KEY is a Wrangler secret; do not commit it.
 REMBG_API_URL = "http://43.137.51.88:8000"

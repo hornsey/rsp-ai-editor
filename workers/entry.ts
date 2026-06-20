@@ -528,8 +528,7 @@ export default {
       } else if (path === "/debug/rembg-health" && req.method === "GET") response = await handleDebugRembgHealth(env);
       else if (path.match(/^\/edit\/[a-f0-9-]+\/input$/) && req.method === "GET") {
         response = await handleEditInput(req, env);
-      }
-      else if (path.match(/^\/edit\/[a-f0-9-]+\/output$/) && req.method === "GET") {
+      } else if (path.match(/^\/edit\/[a-f0-9-]+\/output$/) && req.method === "GET") {
         response = await handleEditOutput(req, env);
       } else if (path.match(/^\/edit\/[a-f0-9-]+$/) && req.method === "GET") {
         response = await handleEditStatus(req, env);
