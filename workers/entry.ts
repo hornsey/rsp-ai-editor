@@ -112,26 +112,19 @@ async function handleSessionInit(req: Request, env: Env): Promise<Response> {
   if (existingToken) {
     const existing = await verifyToken(existingToken, env);
     if (existing.valid) {
-      const row = await db
-        .prepare("SELECT id, plan, monthly_credits, purchased_credits, credits_used, reset_at FROM sessions WHERE id = ?")
-        .bind(existing.sessionId)
-        .first();
+      const entitlement = await checkEntitlement(db, existing.sessionId);
 
-      if (row) {
-        const monthlyCredits = Number(row.monthly_credits ?? 5);
-        const purchasedCredits = Number(row.purchased_credits ?? 0);
-        const creditsUsed = Number(row.credits_used ?? 0);
-
+      if (entitlement.reset_at !== 0) {
         return json({
           ok: true,
           data: {
-            session_id: row.id,
-            plan: row.plan,
-            monthly_credits: monthlyCredits,
-            purchased_credits: purchasedCredits,
-            credits_used: creditsUsed,
-            credits_remaining: Math.max(0, monthlyCredits - creditsUsed) + Math.max(0, purchasedCredits),
-            reset_at: row.reset_at,
+            session_id: existing.sessionId,
+            plan: entitlement.plan,
+            monthly_credits: entitlement.monthly_credits,
+            purchased_credits: entitlement.purchased_credits,
+            credits_used: entitlement.credits_used,
+            credits_remaining: entitlement.credits_remaining,
+            reset_at: entitlement.reset_at,
           },
         });
       }
