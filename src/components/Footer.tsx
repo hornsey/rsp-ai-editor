@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { appVersion } from "@/lib/version";
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -17,6 +18,7 @@ export default function Footer() {
             Fast image and copy editing for creators, sellers, and solo teams. Start without signup, upgrade when volume grows.
           </p>
           <p className="mt-4 text-xs text-on-surface-variant">© {year} RSP AI Editor. All rights reserved.</p>
+          <p className="mt-2 text-xs text-on-surface-variant">Version {appVersion}</p>
         </div>
 
         <nav className="grid grid-cols-2 gap-x-10 gap-y-3 text-sm md:grid-cols-3">
