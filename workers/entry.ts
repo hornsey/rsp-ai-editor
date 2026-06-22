@@ -40,6 +40,14 @@ function outputContentType(key: string): string {
   return "image/png";
 }
 
+function sessionCookie(req: Request, token: string): string {
+  const host = new URL(req.url).hostname;
+  const isLocal = host === "localhost" || host === "127.0.0.1";
+  const domain = host === "image-editor.co" || host.endsWith(".image-editor.co") ? "; Domain=.image-editor.co" : "";
+  const sameSite = isLocal ? "SameSite=Lax" : "SameSite=None; Secure";
+  return `rsp_session=${encodeURIComponent(token)}; Path=/; HttpOnly; ${sameSite}; Max-Age=${30 * DAY_MS / 1000}${domain}`;
+}
+
 async function withContext<T>(stage: string, operation: () => Promise<T>): Promise<T> {
   try {
     return await operation();
@@ -112,6 +120,7 @@ async function handleSessionInit(req: Request, env: Env): Promise<Response> {
   if (existingToken) {
     const existing = await verifyToken(existingToken, env);
     if (existing.valid) {
+      const token = await signAndEncode(existing.sessionId, env);
       const entitlement = await checkEntitlement(db, existing.sessionId);
 
       if (entitlement.reset_at !== 0) {
@@ -119,6 +128,7 @@ async function handleSessionInit(req: Request, env: Env): Promise<Response> {
           ok: true,
           data: {
             session_id: existing.sessionId,
+            session_token: token,
             plan: entitlement.plan,
             monthly_credits: entitlement.monthly_credits,
             purchased_credits: entitlement.purchased_credits,
@@ -148,13 +158,14 @@ async function handleSessionInit(req: Request, env: Env): Promise<Response> {
   const token = await signAndEncode(sessionId, env);
   const headers = new Headers({
     "Content-Type": "application/json",
-    "Set-Cookie": `rsp_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * DAY_MS / 1000}`,
+    "Set-Cookie": sessionCookie(req, token),
   });
 
   return new Response(JSON.stringify({
     ok: true,
     data: {
       session_id: sessionId,
+      session_token: token,
       plan: "free",
       monthly_credits: 5,
       purchased_credits: 0,

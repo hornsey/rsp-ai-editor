@@ -4,12 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import UploadZone from "@/components/UploadZone";
 import HistoryPanel from "@/components/HistoryPanel";
-import { initSession, getUsage, submitEdit, getEditStatus, type EditStatus } from "@/lib/api";
+import { initSession, getUsage, submitEdit, getEditStatus, fetchAuthorizedAssetUrl, type EditStatus } from "@/lib/api";
 import { addHistory } from "@/lib/history";
 import { copyRewriteStatusMessage } from "@/lib/features";
 
 export type EditMode = "enhance" | "remove-bg" | "restyle";
 type ErrorType = "format" | "size" | "network" | "rate_limit" | "server" | null;
+type LocalEditResult = { url: string; note: string };
 
 const MAX_FILE_SIZE_MB = 10;
 
@@ -43,6 +44,81 @@ function getErrorMessage(type: ErrorType): string | null {
   return null;
 }
 
+function loadImageFromFile(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Unable to load image preview."));
+    };
+    image.src = url;
+  });
+}
+
+async function createLocalEditPreview(file: File, mode: EditMode): Promise<LocalEditResult> {
+  const image = await loadImageFromFile(file);
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth || image.width;
+  canvas.height = image.naturalHeight || image.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas is not available in this browser.");
+
+  if (mode === "enhance") {
+    ctx.filter = "contrast(1.12) saturate(1.18) brightness(1.04)";
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return {
+      url: canvas.toDataURL("image/png"),
+      note: "AI service was not reachable, so a browser-side enhance preview was generated for immediate export.",
+    };
+  }
+
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  if (mode === "restyle") {
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, "rgba(25, 195, 125, 0.26)");
+    gradient.addColorStop(0.55, "rgba(255, 255, 255, 0.06)");
+    gradient.addColorStop(1, "rgba(33, 92, 184, 0.22)");
+    ctx.globalCompositeOperation = "soft-light";
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = "source-over";
+    return {
+      url: canvas.toDataURL("image/png"),
+      note: "AI service was not reachable, so a browser-side restyle preview was generated for immediate export.",
+    };
+  }
+
+  const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = pixels.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const nearWhite = r > 228 && g > 228 && b > 228 && Math.max(r, g, b) - Math.min(r, g, b) < 18;
+    if (nearWhite) data[i + 3] = Math.max(0, data[i + 3] - 210);
+  }
+  ctx.putImageData(pixels, 0, 0);
+  return {
+    url: canvas.toDataURL("image/png"),
+    note: "AI service was not reachable, so a browser-side background cleanup preview was generated for immediate export.",
+  };
+}
+
+function recordHistory(mode: EditMode, thumbnail: string | null, outputUrl: string): void {
+  if (outputUrl.startsWith("data:") || outputUrl.startsWith("blob:")) return;
+  try {
+    addHistory({ mode, thumbnail: thumbnail?.startsWith("data:") ? outputUrl : thumbnail || outputUrl, outputUrl });
+  } catch {
+    // History is non-critical and can fail when localStorage is disabled or full.
+  }
+}
+
 export default function EditorPageClient({ initialMode = "enhance" }: { initialMode?: EditMode }) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -53,12 +129,14 @@ export default function EditorPageClient({ initialMode = "enhance" }: { initialM
   const [selectedResult, setSelectedResult] = useState(0);
   const [errorType, setErrorType] = useState<ErrorType>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
   const [creditsUsed, setCreditsUsed] = useState<number | null>(null);
   const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
 
   const handleFileSelect = useCallback((file: File) => {
     setErrorType(null);
     setApiError(null);
+    setFallbackNotice(null);
     setResults([]);
     setSelectedResult(0);
 
@@ -90,6 +168,7 @@ export default function EditorPageClient({ initialMode = "enhance" }: { initialM
 
     setErrorType(null);
     setApiError(null);
+    setFallbackNotice(null);
     setResults([]);
     setSelectedResult(0);
     setIsProcessing(true);
@@ -108,7 +187,8 @@ export default function EditorPageClient({ initialMode = "enhance" }: { initialM
         }
 
         if (lastStatus.status === "done") {
-          const outUrl = lastStatus.output_url || previewUrl;
+          const rawOutUrl = lastStatus.output_url || previewUrl;
+          const outUrl = lastStatus.output_url ? await fetchAuthorizedAssetUrl(lastStatus.output_url) : rawOutUrl;
           setResults(outUrl ? [outUrl] : []);
           setSelectedResult(0);
 
@@ -121,7 +201,7 @@ export default function EditorPageClient({ initialMode = "enhance" }: { initialM
           }
 
           if (outUrl) {
-            addHistory({ mode: activeMode, thumbnail: previewUrl || outUrl, outputUrl: outUrl });
+            recordHistory(activeMode, previewUrl, outUrl);
           }
 
           setIsProcessing(false);
@@ -135,22 +215,39 @@ export default function EditorPageClient({ initialMode = "enhance" }: { initialM
           } else if (msg.includes("format")) {
             setErrorType("format");
           } else {
-            setErrorType("server");
+            const localResult = await createLocalEditPreview(selectedFile, activeMode);
+            setResults([localResult.url]);
+            setSelectedResult(0);
+            setFallbackNotice(`AI edit failed. ${localResult.note}`);
+            recordHistory(activeMode, previewUrl, localResult.url);
           }
           setIsProcessing(false);
           return;
         }
       }
 
-      setApiError("Processing timed out. Please try again.");
+      const localResult = await createLocalEditPreview(selectedFile, activeMode);
+      setResults([localResult.url]);
+      setSelectedResult(0);
+      setFallbackNotice(`Processing timed out. ${localResult.note}`);
+      recordHistory(activeMode, previewUrl, localResult.url);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("network") || msg.includes("fetch")) {
-        setErrorType("network");
-      } else if (msg.toLowerCase().includes("rate") || msg.includes("429")) {
-        setErrorType("rate_limit");
-      } else {
-        setApiError(msg);
+      try {
+        const localResult = await createLocalEditPreview(selectedFile, activeMode);
+        setResults([localResult.url]);
+        setSelectedResult(0);
+        setFallbackNotice(localResult.note);
+        recordHistory(activeMode, previewUrl, localResult.url);
+      } catch (localErr) {
+        const localMsg = localErr instanceof Error ? localErr.message : String(localErr);
+        if (msg.includes("network") || msg.includes("fetch")) {
+          setErrorType("network");
+        } else if (msg.toLowerCase().includes("rate") || msg.includes("429")) {
+          setErrorType("rate_limit");
+        } else {
+          setApiError(`${msg}. Local preview also failed: ${localMsg}`);
+        }
       }
     } finally {
       setIsProcessing(false);
@@ -167,6 +264,7 @@ export default function EditorPageClient({ initialMode = "enhance" }: { initialM
     setSelectedResult(0);
     setErrorType(null);
     setApiError(null);
+    setFallbackNotice(null);
   };
 
   const handleDownload = () => {
@@ -220,6 +318,19 @@ export default function EditorPageClient({ initialMode = "enhance" }: { initialM
           </div>
           <button onClick={() => { setErrorType(null); setApiError(null); }} className="shrink-0" aria-label="Dismiss error">
             <span className="material-symbols-outlined text-lg text-error">close</span>
+          </button>
+        </section>
+      ) : null}
+
+      {fallbackNotice ? (
+        <section className="mb-5 flex items-start gap-3 rounded-xl border border-primary/25 bg-primary-container p-4">
+          <span className="material-symbols-outlined shrink-0 text-primary">info</span>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-on-primary-container">Local preview ready</p>
+            <p className="mt-1 text-sm leading-6 text-on-surface-variant">{fallbackNotice}</p>
+          </div>
+          <button onClick={() => setFallbackNotice(null)} className="shrink-0" aria-label="Dismiss local preview notice">
+            <span className="material-symbols-outlined text-lg text-primary">close</span>
           </button>
         </section>
       ) : null}
@@ -350,7 +461,7 @@ export default function EditorPageClient({ initialMode = "enhance" }: { initialM
                   <span className="material-symbols-outlined text-lg">download</span>
                   Download Result
                 </button>
-                <button onClick={() => { setResults([]); setSelectedResult(0); }} className="secondary-button">
+                <button onClick={() => { setResults([]); setSelectedResult(0); setFallbackNotice(null); }} className="secondary-button">
                   Try Another Mode
                 </button>
               </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type KeyboardEvent } from "react";
+import { useId, useState, useRef, type KeyboardEvent } from "react";
 
 interface UploadZoneProps {
   onFileSelect: (file: File) => void;
@@ -16,12 +16,14 @@ export default function UploadZone({
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
+  const acceptedMimeTypes = acceptedTypes.split(",").map((type) => type.trim()).filter(Boolean);
 
   const handleFile = (file: File) => {
     setError(null);
     
     // Validate file type
-    if (!acceptedTypes.includes(file.type)) {
+    if (!acceptedMimeTypes.includes(file.type)) {
       setError("Please upload a JPG, PNG, or WebP image.");
       return;
     }
@@ -88,10 +90,11 @@ export default function UploadZone({
       aria-label="Upload image file"
     >
       <input
+        id={inputId}
         ref={fileInputRef}
         type="file"
         accept={acceptedTypes}
-        className="hidden"
+        className="sr-only"
         onChange={handleInputChange}
       />
       
@@ -105,17 +108,14 @@ export default function UploadZone({
         Drop your image here or click to upload — JPG, PNG, WebP up to {maxSizeMB}MB
       </p>
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleClick();
-        }}
-        className="primary-button mt-4"
+      <label
+        htmlFor={inputId}
+        onClick={(e) => e.stopPropagation()}
+        className="primary-button mt-4 cursor-pointer"
       >
         <span className="material-symbols-outlined text-lg">upload</span>
         Click to Upload
-      </button>
+      </label>
       
       {error && (
         <p className="mt-2 text-sm text-error">{error}</p>
