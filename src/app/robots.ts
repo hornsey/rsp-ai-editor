@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { toAbsoluteUrl } from "@/lib/site";
+import { siteUrl, toAbsoluteUrl } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -9,5 +9,6 @@ export default function robots(): MetadataRoute.Robots {
       disallow: ["/api/", "/_next/"],
     },
     sitemap: toAbsoluteUrl("/sitemap.xml"),
+    host: siteUrl,
   };
 }

@@ -1,49 +1,29 @@
 import type { MetadataRoute } from "next";
 import { siteUrl, toAbsoluteUrl } from "@/lib/site";
 
+const routes: Array<{
+  path: string;
+  changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
+  priority: number;
+}> = [
+  { path: "/", changeFrequency: "weekly", priority: 1 },
+  { path: "/editor", changeFrequency: "weekly", priority: 0.9 },
+  { path: "/features", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/pricing", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/blog/ai-editor-rsp-editing-guide", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
+  { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
+  { path: "/refund", changeFrequency: "yearly", priority: 0.3 },
+  { path: "/cookie", changeFrequency: "yearly", priority: 0.3 },
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: siteUrl,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 1,
-    },
-    {
-      url: toAbsoluteUrl("/editor"),
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: toAbsoluteUrl("/features"),
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: toAbsoluteUrl("/pricing"),
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: toAbsoluteUrl("/blog/ai-editor-rsp-editing-guide"),
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: toAbsoluteUrl("/privacy"),
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: toAbsoluteUrl("/terms"),
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-  ];
+  const lastModified = new Date();
+
+  return routes.map(({ path, changeFrequency, priority }) => ({
+    url: path === "/" ? siteUrl : toAbsoluteUrl(path),
+    lastModified,
+    changeFrequency,
+    priority,
+  }));
 }
